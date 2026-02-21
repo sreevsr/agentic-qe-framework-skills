@@ -1,0 +1,52 @@
+{
+  "cartBadge": {
+    "primary": "[data-test='shopping-cart-badge']",
+    "fallbacks": [
+      ".shopping_cart_badge",
+      ".shopping-cart-badge",
+      "[class*='cart_badge']"
+    ],
+    "type": "badge",
+    "description": "Shopping cart badge showing item count"
+  },
+  "addToCartBackpack": {
+    "primary": "[data-test='add-to-cart-sauce-labs-backpack']",
+    "fallbacks": [
+      "button:has-text('Add to cart'):near(.inventory_item:has-text('Sauce Labs Backpack'))",
+      "[name='add-to-cart-sauce-labs-backpack']",
+      "[id='add-to-cart-sauce-labs-backpack']"
+    ],
+    "type": "button",
+    "description": "Add to cart button for Sauce Labs Backpack"
+  },
+  "addToCartBikeLight": {
+    "primary": "[data-test='add-to-cart-sauce-labs-bike-light']",
+    "fallbacks": [
+      "button:has-text('Add to cart'):near(.inventory_item:has-text('Sauce Labs Bike Light'))",
+      "[name='add-to-cart-sauce-labs-bike-light']",
+      "[id='add-to-cart-sauce-labs-bike-light']"
+    ],
+    "type": "button",
+    "description": "Add to cart button for Sauce Labs Bike Light"
+  },
+  "cartLink": {
+    "primary": "a[data-test='shopping-cart-link']",
+    "fallbacks": [
+      ".shopping_cart_link",
+      "a.shopping_cart_link",
+      "a:has(.shopping_cart_badge)"
+    ],
+    "type": "link",
+    "description": "Shopping cart link in header"
+  },
+  "productsHeading": {
+    "primary": "text=Products",
+    "fallbacks": [
+      ".title",
+      "[class*='product']:has-text('Products')",
+      "h1:has-text('Products')"
+    ],
+    "type": "heading",
+    "description": "Products page heading"
+  }
+}

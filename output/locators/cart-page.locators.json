@@ -1,0 +1,77 @@
+{
+  "backpackLink": {
+    "primary": "a:has-text('Sauce Labs Backpack')",
+    "fallbacks": [
+      "[data-test='inventory-item-name']",
+      ".inventory_item_name:has-text('Sauce Labs Backpack')",
+      "a[href*='backpack']"
+    ],
+    "type": "link",
+    "description": "Sauce Labs Backpack product link in cart"
+  },
+  "bikeLightLink": {
+    "primary": "a:has-text('Sauce Labs Bike Light')",
+    "fallbacks": [
+      ".inventory_item_name:has-text('Sauce Labs Bike Light')",
+      "a[href*='bike']"
+    ],
+    "type": "link",
+    "description": "Sauce Labs Bike Light product link in cart"
+  },
+  "removeBackpack": {
+    "primary": "[data-test='remove-sauce-labs-backpack']",
+    "fallbacks": [
+      "button:has-text('Remove'):near(a:has-text('Sauce Labs Backpack'))",
+      "[name='remove-sauce-labs-backpack']",
+      "[id='remove-sauce-labs-backpack']"
+    ],
+    "type": "button",
+    "description": "Remove button for Sauce Labs Backpack"
+  },
+  "removeBikeLight": {
+    "primary": "[data-test='remove-sauce-labs-bike-light']",
+    "fallbacks": [
+      "button:has-text('Remove'):near(a:has-text('Sauce Labs Bike Light'))",
+      "[name='remove-sauce-labs-bike-light']",
+      "[id='remove-sauce-labs-bike-light']"
+    ],
+    "type": "button",
+    "description": "Remove button for Sauce Labs Bike Light"
+  },
+  "continueShoppingButton": {
+    "primary": "[data-test='continue-shopping']",
+    "fallbacks": [
+      "button:has-text('Continue Shopping')",
+      "[name='continue-shopping']"
+    ],
+    "type": "button",
+    "description": "Continue Shopping button"
+  },
+  "checkoutButton": {
+    "primary": "[data-test='checkout']",
+    "fallbacks": [
+      "button:has-text('Checkout')",
+      "[name='checkout']"
+    ],
+    "type": "button",
+    "description": "Checkout button"
+  },
+  "cartHeading": {
+    "primary": "text=Your Cart",
+    "fallbacks": [
+      ".title:has-text('Your Cart')",
+      "h1:has-text('Your Cart')"
+    ],
+    "type": "heading",
+    "description": "Shopping cart page heading"
+  },
+  "cartTable": {
+    "primary": ".cart_list",
+    "fallbacks": [
+      "table",
+      "[class*='cart']"
+    ],
+    "type": "table",
+    "description": "Cart items table"
+  }
+}

@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+output/node_modules/
+
+# Environment secrets
+.env
+.env.local
+output/**/.env
+*.pem
+*.key
+
+# IDE — keep MCP config, ignore everything else
+.vscode/*
+!.vscode/mcp.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Playwright runtime artifacts — root level and inside output/
+test-results/
+playwright-report/
+output/**/test-results/
+output/**/playwright-report/
+output/**/blob-report/
+
+
+# Scout reports
+scout-reports/*.md
+scout-reports/*.json
+
+# Logs and temp
+*.log
+*.tmp
+npm-debug.log*
+*.png
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/

@@ -1,0 +1,32 @@
+{
+  "username": {
+    "primary": "[data-test='username']",
+    "fallbacks": [
+      "input[name='user-name']",
+      "#user-name",
+      "input[placeholder='Username']"
+    ],
+    "type": "input",
+    "description": "Username input field on login page"
+  },
+  "password": {
+    "primary": "[data-test='password']",
+    "fallbacks": [
+      "input[name='password']",
+      "#password",
+      "input[placeholder='Password']"
+    ],
+    "type": "input",
+    "description": "Password input field on login page"
+  },
+  "loginButton": {
+    "primary": "[data-test='login-button']",
+    "fallbacks": [
+      "button:has-text('Login')",
+      "#login-button",
+      "input[type='submit']"
+    ],
+    "type": "button",
+    "description": "Login button to submit credentials"
+  }
+}
