@@ -28,7 +28,7 @@ Score each dimension 1-5.
 
 
 
-Save output/review-scorecard.md with:
+Save output/review-scorecard-{{scenario}}.md with:
 - Score per dimension with specific findings
 - Total score out of 40
 - List of every issue found with file path and line reference

@@ -18,7 +18,7 @@ Read agents/03-healer.md for base instructions, then apply CODE_REVIEW_FIXES mod
 
 ─── PHASE 1: READ REVIEW REPORT ───
 
-1. Read output/review-scorecard.md completely
+1. Read output/review-scorecard-{{scenario}}.md completely
 2. Extract all issues with these statuses:
    - CRITICAL (score 0-2)
    - NEEDS ATTENTION (score 3)
@@ -68,7 +68,7 @@ After applying ALL fixes:
 
 ─── PHASE 5: REPORT ───
 
-Save output/healer-review-fixes-report.md:
+Save output/healer-review-fixes-report-{{scenario}}.md:
 ```markdown
 # Healer Code Review Fixes Report
 

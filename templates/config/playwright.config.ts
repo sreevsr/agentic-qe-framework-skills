@@ -1,4 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Load environment-specific .env file
+// Usage: set TEST_ENV=qa && npx playwright test
+// Windows cmd:    set TEST_ENV=qa && npx playwright test --project=qa
+// PowerShell:     $env:TEST_ENV="qa"; npx playwright test --project=qa
+// Linux/Mac:      TEST_ENV=qa npx playwright test --project=qa
+const env = process.env.TEST_ENV || 'dev';
+dotenv.config({ path: path.join(__dirname, `.env.${env}`) });
+dotenv.config({ path: path.join(__dirname, '.env') }); // fallback for backward compatibility
 
 /**
  * Playwright Configuration — Chrome Only
@@ -49,9 +60,9 @@ export default defineConfig({
   },
 
   projects: [
-    {
-      name: 'chrome',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    },
+    { name: 'chrome', use: { ...devices['Desktop Chrome'], channel: 'chrome' } },
+    { name: 'edge', use: { ...devices['Desktop Edge'], channel: 'msedge' } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 });

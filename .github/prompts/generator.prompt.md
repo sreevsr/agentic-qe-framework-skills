@@ -8,8 +8,9 @@ PLATFORM COMPATIBILITY MODE:
 - Use Node.js path.join() for all file paths (never hardcode / or \)
 - DO NOT use git commands or check repository state
 - Self-contained execution mode
-- Input: path.join(process.cwd(), 'output', 'analyst-report.md')
-- Output: path.join(process.cwd(), 'output', 'tests', '{{type}}', '{{scenario}}.spec.ts')
+- Input: path.join(process.cwd(), 'output', 'analyst-report-{{scenario}}.md')
+- Output (no folder): path.join(process.cwd(), 'output', 'tests', '{{type}}', '{{scenario}}.spec.ts')
+- Output (with folder): path.join(process.cwd(), 'output', 'tests', '{{type}}', '{{folder}}', '{{scenario}}.spec.ts')
 ---
 
 SCENARIO_NAME = {{scenario}}
@@ -17,11 +18,16 @@ SCENARIO_TYPE = {{type}}
 
 Read agents/02-generator.md for your instructions.
 
+SCENARIO PATH RESOLUTION:
+- Web without folder: scenarios/web/{{scenario}}.md
+- Web with folder:    scenarios/web/{{folder}}/{{scenario}}.md
+- API without folder: scenarios/api/{{scenario}}.md
+- API with folder:    scenarios/api/{{folder}}/{{scenario}}.md
+
 SOURCE FILES:
-- If SCENARIO_TYPE is web: Read output/analyst-report.md + scenarios/web/{{scenario}}.md
+- If SCENARIO_TYPE is web: Read output/analyst-report-{{scenario}}.md + the scenario file at the resolved path above
 - If SCENARIO_TYPE is web AND scout-reports/page-inventory-latest.md exists: Also read this file for accurate DOM selectors and component interaction patterns
-- If SCENARIO_TYPE is api: Read scenarios/api/{{scenario}}.md directly (no analyst report or Scout report needed)
-Use templates in templates/core/ and templates/config/ as code patterns.
+- If SCENARIO_TYPE is api: Read the scenario file at the resolved path above directly (no analyst report or Scout report needed)
 
 SHARED FILES — CREATE IF NOT EXISTS:
 Check if these files already exist in output/. If they do, skip creating them.
@@ -56,11 +62,14 @@ VERIFY: After this step, confirm all three files exist before proceeding to gene
 
 SCENARIO-SPECIFIC FILES — ALWAYS RECREATE:
 Delete and regenerate only the current scenario's files:
-- Test spec: output/tests/{{type}}/{{scenario}}.spec.ts
+- Test spec without folder: output/tests/{{type}}/{{scenario}}.spec.ts
+- Test spec with folder:    output/tests/{{type}}/{{folder}}/{{scenario}}.spec.ts
 - Test data: output/test-data/{{type}}/{{scenario}}/
 Use the appropriate OS command to delete:
-  Windows: if exist output\tests\{{type}}\{{scenario}}.spec.ts del output\tests\{{type}}\{{scenario}}.spec.ts
-  Linux/Mac: rm -f output/tests/{{type}}/{{scenario}}.spec.ts
+  Windows (no folder): if exist output\tests\{{type}}\{{scenario}}.spec.ts del output\tests\{{type}}\{{scenario}}.spec.ts
+  Windows (with folder): if exist output\tests\{{type}}\{{folder}}\{{scenario}}.spec.ts del output\tests\{{type}}\{{folder}}\{{scenario}}.spec.ts
+  Linux/Mac (no folder): rm -f output/tests/{{type}}/{{scenario}}.spec.ts
+  Linux/Mac (with folder): rm -f output/tests/{{type}}/{{folder}}/{{scenario}}.spec.ts
 
 For web scenarios, also generate (create if not exists — do not overwrite if another scenario already created these):
 - output/locators/[page-name].json (one per page discovered)

@@ -13,7 +13,9 @@ PLATFORM COMPATIBILITY MODE:
 SCENARIO_NAME = {{scenario}}
 
 Read the file agents/01-analyst.md for your instructions.
-Then read the scenario in scenarios/web/{{scenario}}.md.
+Then read the scenario:
+- If folder is provided: scenarios/web/{{folder}}/{{scenario}}.md
+- If folder is not provided: scenarios/web/{{scenario}}.md.
 
 Execute every step in the scenario using the Playwright MCP tools listed in your agent instructions.
 Take a page snapshot after each action to confirm the result before moving to the next step.
@@ -23,4 +25,4 @@ For CAPTURE steps: read the value from the page and record it.
 For SCREENSHOT steps: take a screenshot and note the filename.
 For DATASETS: execute only the FIRST data row.
 
-After completing all steps, save your report as output/analyst-report.md.
+After completing all steps, save your report as output/analyst-report-{{scenario}}.md.
