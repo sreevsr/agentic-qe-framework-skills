@@ -32,17 +32,27 @@ Only create on the first scenario run:
 - output/.env.example
 - output/core/locator-loader.ts
 
-CORE FILES — MANDATORY:
+CORE FILES — MANDATORY (non-negotiable):
 These three files MUST exist in output/core/ after generation completes:
 - output/core/base-page.ts
 - output/core/shared-state.ts
 - output/core/locator-loader.ts
 
-Rules:
-- If output/core/ already has these files: DO NOT overwrite. Keep existing version.
-- If output/core/ does NOT have these files AND templates/core/ exists: COPY from templates/core/
-- If output/core/ does NOT have these files AND templates/core/ does NOT exist: generate using patterns from agents/02-generator.md
-Never skip these. Never generate your own version when templates exist.
+BEFORE generating any other files, run these copy commands:
+
+If templates/core/ exists, copy each missing file:
+  Windows:
+    if not exist output\core\base-page.ts copy templates\core\base-page.ts output\core\base-page.ts
+    if not exist output\core\shared-state.ts copy templates\core\shared-state.ts output\core\shared-state.ts
+    if not exist output\core\locator-loader.ts copy templates\core\locator-loader.ts output\core\locator-loader.ts
+  Linux/Mac:
+    [ ! -f output/core/base-page.ts ] && cp templates/core/base-page.ts output/core/base-page.ts
+    [ ! -f output/core/shared-state.ts ] && cp templates/core/shared-state.ts output/core/shared-state.ts
+    [ ! -f output/core/locator-loader.ts ] && cp templates/core/locator-loader.ts output/core/locator-loader.ts
+
+If templates/core/ does NOT exist, generate these files using patterns from agents/02-generator.md.
+
+VERIFY: After this step, confirm all three files exist before proceeding to generate any other files.
 
 SCENARIO-SPECIFIC FILES — ALWAYS RECREATE:
 Delete and regenerate only the current scenario's files:

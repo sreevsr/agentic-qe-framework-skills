@@ -129,9 +129,15 @@ Save output/healer-review-fixes-report.md.
 
 ## Output: Pipeline Summary — MANDATORY FILE SAVE
 
-After all stages complete (or if a stage fails), you MUST create the file `output/pipeline-summary.md` using the editFiles tool.
+After all stages complete (or if a stage fails):
+
+1. Create the file output/pipeline-summary.md using the editFiles tool
+2. Verify the file was created:
+   Windows: if exist output\pipeline-summary.md echo "pipeline-summary.md created"
+   Linux: [ -f output/pipeline-summary.md ] && echo "pipeline-summary.md created"
+
 Do NOT just print the summary in chat — you MUST write it to disk as a file.
-This is a required deliverable, not optional.
+If the verification command does not confirm the file exists, create it again.
 
 ```markdown
 # QE Pipeline Summary
