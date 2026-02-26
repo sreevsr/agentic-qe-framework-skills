@@ -42,16 +42,29 @@ SCENARIO_PATH:
   If folder provided: scenarios/{type}/{folder}/{scenario}.md
   If folder not provided: scenarios/{type}/{scenario}.md
 
-ANALYST_REPORT: output/analyst-report-{scenario}.md
+ANALYST_REPORT:
+  If folder provided: output/{folder}/analyst-report-{scenario}.md
+  If folder not provided: output/analyst-report-{scenario}.md
 
 TEST_SPEC:
   If folder provided: output/tests/{type}/{folder}/{scenario}.spec.ts
   If folder not provided: output/tests/{type}/{scenario}.spec.ts
 
-HEALER_REPORT: output/healer-report-{scenario}.md
-REVIEW_SCORECARD: output/review-scorecard-{scenario}.md
-HEALER_REVIEW_REPORT: output/healer-review-fixes-report-{scenario}.md
-PIPELINE_SUMMARY: output/pipeline-summary-{scenario}.md
+HEALER_REPORT:
+  If folder provided: output/{folder}/healer-report-{scenario}.md
+  If folder not provided: output/healer-report-{scenario}.md
+
+REVIEW_SCORECARD:
+  If folder provided: output/{folder}/review-scorecard-{scenario}.md
+  If folder not provided: output/review-scorecard-{scenario}.md
+
+HEALER_REVIEW_REPORT:
+  If folder provided: output/{folder}/healer-review-fixes-report-{scenario}.md
+  If folder not provided: output/healer-review-fixes-report-{scenario}.md
+
+PIPELINE_SUMMARY:
+  If folder provided: output/{folder}/pipeline-summary-{scenario}.md
+  If folder not provided: output/pipeline-summary-{scenario}.md
 
 ### STAGE 1: QE Planner (skip if type=api or skip_analyst=true)
 
@@ -67,10 +80,12 @@ If folder was not provided: The scenario is at scenarios/web/{scenario}.md
 Execute every step using Playwright MCP tools.
 After EVERY action, use "Page snapshot" before proceeding.
 For DATASETS: execute only the FIRST data row.
-Save report as output/analyst-report-{scenario}.md
+Save report as:
+  If folder provided: output/{folder}/analyst-report-{scenario}.md
+  If folder not provided: output/analyst-report-{scenario}.md
 ```
 
-**Verify before proceeding:** Check that output/analyst-report-{scenario}.md exists and contains step results.
+**Verify before proceeding:** Check that ANALYST_REPORT exists and contains step results.
 
 ### STAGE 2: QE Generator
 
@@ -85,7 +100,7 @@ Read agents/02-generator.md for your instructions.
 
 SOURCE FILES:
 - If web without folder: Read output/analyst-report-{scenario}.md + scenarios/web/{scenario}.md
-- If web with folder: Read output/analyst-report-{scenario}.md + scenarios/web/{folder}/{scenario}.md
+- If web with folder: Read output/{folder}/analyst-report-{scenario}.md + scenarios/web/{folder}/{scenario}.md
 - If web AND scout-reports/page-inventory-latest.md exists: Also read for DOM selectors
 - If api without folder: Read scenarios/api/{scenario}.md directly
 - If api with folder: Read scenarios/api/{folder}/{scenario}.md directly
@@ -112,10 +127,12 @@ Phase 1: Pre-flight validation (count steps)
 Phase 2: Setup (npm install, playwright install)
 Phase 3: Run tests
 Phase 4: Diagnose and fix (max 3 cycles)
-Phase 5: Save output/healer-report-{scenario}.md
+Phase 5: Save report as:
+  If folder provided: output/{folder}/healer-report-{scenario}.md
+  If folder not provided: output/healer-report-{scenario}.md
 ```
 
-**Verify before proceeding:** Check that output/healer-report-{scenario}.md exists.
+**Verify before proceeding:** Check that HEALER_REPORT exists.
 Record: how many tests passed, failed, fixme.
 
 ### STAGE 4: QE Reviewer
@@ -125,14 +142,17 @@ Delegate to the **QE Reviewer** subagent with this prompt:
 ```
 SCENARIO_NAME = {scenario}
 SCENARIO_TYPE = {type}
+FOLDER = {folder}    ← only include this line if folder was provided
 
 Read agents/04-reviewer.md for your instructions.
 
 Review all files in output/ against 8 quality dimensions.
-Save output/review-scorecard-{scenario}.md with scores and verdict.
+Save scorecard as:
+  If folder provided: output/{folder}/review-scorecard-{scenario}.md
+  If folder not provided: output/review-scorecard-{scenario}.md
 ```
 
-**Verify before proceeding:** Check that output/review-scorecard-{scenario}.md exists.
+**Verify before proceeding:** Check that REVIEW_SCORECARD exists.
 Read the verdict: APPROVED or NEEDS FIXES.
 
 ### STAGE 5: QE Healer Review Fixes (only if Reviewer verdict = NEEDS FIXES)
@@ -145,22 +165,29 @@ If NEEDS FIXES, delegate to the **QE Healer (Review Fixes)** subagent with this 
 MODE: CODE_REVIEW_FIXES
 SCENARIO_NAME = {scenario}
 SCENARIO_TYPE = {type}
+FOLDER = {folder}    ← only include this line if folder was provided
 
 Read agents/03-healer.md for base instructions, then apply CODE_REVIEW_FIXES mode.
-Read output/review-scorecard-{scenario}.md for issues to fix.
+Read scorecard from:
+  If folder provided: output/{folder}/review-scorecard-{scenario}.md
+  If folder not provided: output/review-scorecard-{scenario}.md
 Fix order: Dimension 1 → 7 → 8 → 5 → 4
 After fixes, run tests to verify they still pass.
-Save output/healer-review-fixes-report-{scenario}.md
+Save report as:
+  If folder provided: output/{folder}/healer-review-fixes-report-{scenario}.md
+  If folder not provided: output/healer-review-fixes-report-{scenario}.md
 ```
 
 ## Output: Pipeline Summary — MANDATORY FILE SAVE
 
 After all stages complete (or if a stage fails):
 
-1. Create the file output/pipeline-summary-{scenario}.md using the editFiles tool
+1. Create the file at PIPELINE_SUMMARY using the editFiles tool
 2. Verify the file was created:
-   Windows: if exist output\pipeline-summary-{scenario}.md echo "pipeline-summary created"
-   Linux: [ -f output/pipeline-summary-{scenario}.md ] && echo "pipeline-summary created"
+   Windows (no folder): if exist output\pipeline-summary-{scenario}.md echo "pipeline-summary created"
+   Windows (with folder): if exist output\{folder}\pipeline-summary-{scenario}.md echo "pipeline-summary created"
+   Linux (no folder): [ -f output/pipeline-summary-{scenario}.md ] && echo "pipeline-summary created"
+   Linux (with folder): [ -f output/{folder}/pipeline-summary-{scenario}.md ] && echo "pipeline-summary created"
 
 Do NOT just print the summary in chat — you MUST write it to disk as a file.
 If the verification command does not confirm the file exists, create it again.
@@ -170,6 +197,7 @@ If the verification command does not confirm the file exists, create it again.
 
 **Scenario:** {scenario}
 **Type:** {type}
+**Folder:** {folder} (or N/A if not provided)
 **Date:** {timestamp}
 **Duration:** {total time}
 
@@ -177,11 +205,11 @@ If the verification command does not confirm the file exists, create it again.
 
 | Stage | Agent | Status | Output File | Notes |
 |-------|-------|--------|-------------|-------|
-| 1 | QE Planner | ✅/❌/⏭️ | analyst-report-{scenario}.md | {notes} |
+| 1 | QE Planner | ✅/❌/⏭️ | [{folder}/]analyst-report-{scenario}.md | {notes} |
 | 2 | QE Generator | ✅/❌ | tests/{type}/[{folder}/]{scenario}.spec.ts | {notes} |
-| 3 | QE Healer | ✅/❌ | healer-report-{scenario}.md | {pass}/{fail}/{fixme} |
-| 4 | QE Reviewer | ✅/❌ | review-scorecard-{scenario}.md | Score: {X}/40 |
-| 5 | QE Healer Review | ✅/❌/⏭️ | healer-review-fixes-report-{scenario}.md | {notes} |
+| 3 | QE Healer | ✅/❌ | [{folder}/]healer-report-{scenario}.md | {pass}/{fail}/{fixme} |
+| 4 | QE Reviewer | ✅/❌ | [{folder}/]review-scorecard-{scenario}.md | Score: {X}/40 |
+| 5 | QE Healer Review | ✅/❌/⏭️ | [{folder}/]healer-review-fixes-report-{scenario}.md | {notes} |
 
 ## Final Verdict
 

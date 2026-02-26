@@ -18,7 +18,9 @@ Read agents/03-healer.md for base instructions, then apply CODE_REVIEW_FIXES mod
 
 ─── PHASE 1: READ REVIEW REPORT ───
 
-1. Read output/review-scorecard-{{scenario}}.md completely
+1. Read the review scorecard:
+   - If folder provided: output/{{folder}}/review-scorecard-{{scenario}}.md
+   - If no folder: output/review-scorecard-{{scenario}}.md
 2. Extract all issues with these statuses:
    - CRITICAL (score 0-2)
    - NEEDS ATTENTION (score 3)
@@ -63,12 +65,18 @@ JSON RULES:
 After applying ALL fixes:
 1. Verify TypeScript compiles: cd output && npx tsc --noEmit
 2. Verify JSON files are valid
-3. Run tests: npx playwright test tests/{{type}}/{{scenario}}.spec.ts --reporter=list
+3. Run tests:
+   - If folder provided: npx playwright test tests/{{type}}/{{folder}}/{{scenario}}.spec.ts --reporter=list
+   - If no folder: npx playwright test tests/{{type}}/{{scenario}}.spec.ts --reporter=list
 4. All tests MUST still pass after fixes
 
 ─── PHASE 5: REPORT ───
 
-Save output/healer-review-fixes-report-{{scenario}}.md:
+Save the healer review fixes report to:
+- If folder provided: output/{{folder}}/healer-review-fixes-report-{{scenario}}.md
+- If no folder: output/healer-review-fixes-report-{{scenario}}.md
+
+Format:
 ```markdown
 # Healer Code Review Fixes Report
 

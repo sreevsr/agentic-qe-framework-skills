@@ -25,4 +25,6 @@ For CAPTURE steps: read the value from the page and record it.
 For SCREENSHOT steps: take a screenshot and note the filename.
 For DATASETS: execute only the FIRST data row.
 
-After completing all steps, save your report as output/analyst-report-{{scenario}}.md.
+After completing all steps, save your report as:
+- If folder provided: output/{{folder}}/analyst-report-{{scenario}}.md
+- If folder not provided: output/analyst-report-{{scenario}}.md

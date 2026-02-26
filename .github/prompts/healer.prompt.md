@@ -21,7 +21,8 @@ Read agents/03-healer.md for your instructions.
 ─── PHASE 1: PRE-FLIGHT VALIDATION ───
 
 1. Read the source file:
-   - If SCENARIO_TYPE is web: Read output/analyst-report-{{scenario}}.md
+   - If SCENARIO_TYPE is web and folder provided: Read output/{{folder}}/analyst-report-{{scenario}}.md
+   - If SCENARIO_TYPE is web and no folder: Read output/analyst-report-{{scenario}}.md
    - If SCENARIO_TYPE is api: Read scenarios/api/{{scenario}}.md
 2. Open the test spec:
     If folder provided: output/tests/{{type}}/{{folder}}/{{scenario}}.spec.ts
@@ -54,7 +55,10 @@ After 3 cycles, mark unresolved tests with test.fixme() and document the issue.
 
 ─── PHASE 5: REPORT ───
 
-16. Save output/healer-report-{{scenario}}.md with:
+16. Save the healer report with:
+    - If folder provided: output/{{folder}}/healer-report-{{scenario}}.md
+    - If no folder: output/healer-report-{{scenario}}.md
+    Contents:
     - Pre-flight results (steps added, if any)
     - Fix cycles used (out of 3 max)
     - Each fix: root cause category, what was wrong, what was fixed

@@ -25,7 +25,8 @@ SCENARIO PATH RESOLUTION:
 - API with folder:    scenarios/api/{{folder}}/{{scenario}}.md
 
 SOURCE FILES:
-- If SCENARIO_TYPE is web: Read output/analyst-report-{{scenario}}.md + the scenario file at the resolved path above
+- If SCENARIO_TYPE is web and folder provided: Read output/{{folder}}/analyst-report-{{scenario}}.md + the scenario file at the resolved path above
+- If SCENARIO_TYPE is web and no folder: Read output/analyst-report-{{scenario}}.md + the scenario file at the resolved path above
 - If SCENARIO_TYPE is web AND scout-reports/page-inventory-latest.md exists: Also read this file for accurate DOM selectors and component interaction patterns
 - If SCENARIO_TYPE is api: Read the scenario file at the resolved path above directly (no analyst report or Scout report needed)
 
