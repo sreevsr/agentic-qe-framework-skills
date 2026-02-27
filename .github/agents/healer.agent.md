@@ -71,11 +71,30 @@ On failure, classify root cause:
   2. Check Scout report for correct selector (with folder: scout-reports/{folder}/{scenario}-page-inventory-latest.md, without folder: scout-reports/{scenario}-page-inventory-latest.md)
   3. If custom component, fix interaction pattern (not just selector)
   4. Construct new selector from page snapshot
-- **D. WRONG EXPECTED VALUE** — Fix: update expected value or assertion logic
+- **D. WRONG EXPECTED VALUE** — STOP: check if the source scenario explicitly defines this value. If yes, do NOT change it — flag as POTENTIAL BUG. Only fix if the value was auto-generated incorrectly.
 - **E. IMPORT / CONFIG ERROR** — Fix: correct paths and dependencies
 - **F. API ERROR** — 4xx/5xx responses, payload mismatch, CORS. IMPORTANT: Diagnose each host individually. Never blanket-skip all API tests because one host is unreachable. If a specific host is behind bot protection (e.g., Cloudflare), skip ONLY that host's tests. For other hosts, investigate timeout, URL, or payload issues.
 
 For Category A: always check the source file for what navigation should have preceded the failing step. Verify the test is on the right screen before assuming the selector is wrong.
+
+### Application Bug Protection (CRITICAL)
+
+The Healer fixes TEST CODE — it must NEVER alter EXPECTED BEHAVIOR.
+
+**NEVER DO:**
+- Change expected status codes or assertion values that the scenario explicitly defines
+- Remove or weaken VERIFY assertions
+- Use `{ force: true }` to bypass disabled/overlapped elements
+- Substitute different resource IDs when CRUD chain persistence fails
+- Add login/navigation steps not in the source scenario
+
+**WHEN TO FLAG (not fix):**
+- API: POST returns 2xx but GET on created resource returns 404 → flag as POTENTIAL BUG
+- API: PUT/PATCH returns 2xx but GET shows old values → flag as POTENTIAL BUG
+- Web: VERIFY fails but selector IS correct (element found, wrong content) → flag as POTENTIAL BUG
+- Web: Element disabled/overlapped when it should be clickable → flag as POTENTIAL BUG
+
+**HOW:** Mark with `test.fixme('POTENTIAL BUG: [description]')`, document in healer report under "Potential Application Bugs", do not adapt the test.
 
 Apply fix → re-run → repeat (max 3 cycles).
 After 3 cycles, mark unresolved tests with test.fixme() and document.

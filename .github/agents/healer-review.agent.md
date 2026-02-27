@@ -16,6 +16,8 @@ model: ['Claude Sonnet 4.5', 'GPT-4o']
 - Do NOT use Playwright MCP browser tools or create subagents
 - Use ONLY the terminal to run commands and edit files
 - Work in the output/ directory
+- Never weaken, remove, or modify VERIFY assertions or expected values during review fixes
+- Review fixes are code quality improvements only — they must not change test behavior
 
 # Instructions
 

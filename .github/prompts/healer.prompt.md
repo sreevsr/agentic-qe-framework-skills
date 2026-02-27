@@ -49,7 +49,11 @@ Read agents/03-healer.md for your instructions.
 
 ─── PHASE 4: DIAGNOSE AND FIX (max 3 cycles) ───
 
-Apply diagnosis categories A-F from your agent instructions. For Category A, always check the source file for what navigation should have preceded the failing step. Verify the test is on the right screen before assuming the selector is wrong.
+Apply diagnosis categories A-G from your agent instructions. For Category A, always check the source file for what navigation should have preceded the failing step. Verify the test is on the right screen before assuming the selector is wrong.
+
+CRITICAL — APPLICATION BUG PROTECTION:
+Before fixing any assertion or API failure, check: is this a test defect or an application defect?
+If the test code is correct but the application returns unexpected results, mark with test.fixme('POTENTIAL BUG: ...') — do NOT adapt the test to match the buggy behavior. See agents/03-healer.md for the full guardrail rules.
 
 Apply fix → re-run → repeat (max 3 cycles).
 After 3 cycles, mark unresolved tests with test.fixme() and document the issue.

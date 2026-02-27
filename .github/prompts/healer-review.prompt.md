@@ -44,6 +44,8 @@ Read agents/03-healer.md for base instructions, then apply CODE_REVIEW_FIXES mod
 
 ─── PHASE 3: APPLY FIXES ───
 
+IMPORTANT: Review fixes must NEVER weaken or remove assertions, change expected values, or alter test behavior. Only improve code quality (formatting, imports, selectors, tags, config).
+
 Fix order: Dimension 1 → 7 → 8 → 5 → 4 (most complex last)
 
 For Dimension 4 fixes:
