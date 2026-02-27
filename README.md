@@ -34,7 +34,15 @@ The QE Orchestrator chains all agents automatically using VS Code 1.109 subagent
 @qe-orchestrator /orchestrator scenario=saucedemo-cart-feature type=web
 ```
 
-One command triggers the full pipeline. Each agent runs as a subagent with its own context window. The orchestrator verifies output files between stages, only proceeds when the previous stage succeeds, and produces a `pipeline-summary.md` at the end.
+One command triggers the full pipeline. Each agent runs as a subagent with its own context window. The orchestrator verifies output files between stages, only proceeds when the previous stage succeeds, and produces a `pipeline-summary-{scenario}.md` at the end.
+
+For subfolder organization (larger projects), add the `folder` parameter:
+
+```
+@qe-orchestrator /orchestrator scenario=cart-crud type=web folder=cart
+```
+
+See `ENTERPRISE-SCALING-GUIDE.md` for folder structure, scenario organization, and CI/CD integration patterns.
 
 Individual agents can also be invoked standalone:
 
@@ -125,9 +133,8 @@ agentic-qe-framework-enterprise/
 ├── tests/web/
 │   └── scout-agent-v4.spec.ts      ← Scout Agent v4 (67 component patterns)
 ├── remote-control.js               ← Scout remote control (Terminal 2)
-├── output/                         ← Generated framework (gitignored)
-├── PROMPT-TEMPLATES.md             ← Reference documentation
-├── ENTERPRISE-SCALING-GUIDE.md     ← Multi-team scaling patterns
+├── output/                         ← Shared generated project (gitignored, one project for all scenarios)
+├── ENTERPRISE-SCALING-GUIDE.md     ← Multi-team scaling, CI/CD, folder organization
 └── README.md
 ```
 
@@ -228,24 +235,26 @@ Maximum 3 fix cycles. Unresolved tests marked with `test.fixme()` and documented
 
 ## For New Teams
 
-1. Fork or clone this repo
-2. Delete `output/` (you'll generate your own)
-3. Delete sample scenarios in `scenarios/web/` and `scenarios/api/` (keep `_template.md`)
-4. Write your own scenario `.md` files using the template
-5. Create `.env` from `.env.example` with your application's credentials
-6. Run the orchestrator or individual agents
-7. Your generated `output/` folder is your application-specific test framework
+1. Fork or clone this repo (one repo per application — see scaling guide)
+2. Delete `output/` and sample scenarios (keep `_template.md`)
+3. Write your scenario `.md` files using the template
+4. Create `.env` from `.env.example` with your application's credentials
+5. Run: `@qe-orchestrator /orchestrator scenario=my-feature type=web`
+6. Once tests pass and Reviewer approves, commit `output/` to your repo
 
-See `ENTERPRISE-SCALING-GUIDE.md` for multi-team and multi-application scaling patterns.
+See `ENTERPRISE-SCALING-GUIDE.md` for multi-team scaling, folder organization, CI/CD integration, and team workflow patterns.
 
 ## Architecture
 
-### Agent File Architecture
+### Agent File Architecture (Three-File System)
 
-Each agent has two files:
+Each agent has three layers of instructions:
 
-- **`.agent.md`** — Agent identity, permanent rules, quality standards, tool permissions. Edit for *what the agent is allowed to do*.
-- **`.prompt.md`** — Runtime instructions with `{{scenario}}` and `{{type}}` variable substitution. Edit for *how the agent does the work*.
+- **`.agent.md`** (`.github/agents/`) — Agent identity, permanent rules, tool permissions. Always loaded by Copilot Chat.
+- **`0X-*.md`** (`agents/`) — Detailed step-by-step instructions. Referenced by `.agent.md`. This is where agents get their core behavior.
+- **`.prompt.md`** (`.github/prompts/`) — Runtime template with `{{scenario}}`, `{{type}}`, `{{folder}}` variable substitution. Used for standalone slash command invocations only.
+
+When the orchestrator delegates to a subagent, it bypasses `.prompt.md` — the subagent gets the delegation prompt + `.agent.md` + reads `agents/0X-*.md`. See `ENTERPRISE-SCALING-GUIDE.md` Section 9 for the full prompt architecture details.
 
 ### Core Files (Source of Truth)
 
