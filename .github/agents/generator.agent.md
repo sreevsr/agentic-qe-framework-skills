@@ -16,10 +16,11 @@ handoffs:
 - Use Node.js path.join() for all file paths (never hardcode / or \)
 - DO NOT use git commands or check repository state
 - Self-contained execution mode
-- Input (no folder): path.join(process.cwd(), 'output', 'analyst-report-{scenario}.md')
-- Input (with folder): path.join(process.cwd(), 'output', '{folder}', 'analyst-report-{scenario}.md')
-- Output (no folder): path.join(process.cwd(), 'output', 'tests', '{type}', '{scenario}.spec.ts')
-- Output (with folder): path.join(process.cwd(), 'output', 'tests', '{type}', '{folder}', '{scenario}.spec.ts')
+- PROJECT ROOT: path.join(process.cwd(), 'output') — all generated files go here. ONE shared project, not per-scenario.
+- Analyst report (no folder): path.join(process.cwd(), 'output', 'analyst-report-{scenario}.md')
+- Analyst report (with folder): path.join(process.cwd(), 'output', '{folder}', 'analyst-report-{scenario}.md')
+- Test spec (no folder): path.join(process.cwd(), 'output', 'tests', '{type}', '{scenario}.spec.ts')
+- Test spec (with folder): path.join(process.cwd(), 'output', 'tests', '{type}', '{folder}', '{scenario}.spec.ts')
 
 # Rules
 

@@ -96,6 +96,10 @@ SCENARIO_NAME = {scenario}
 SCENARIO_TYPE = {type}
 FOLDER = {folder}    ← only include this line if folder was provided
 
+PROJECT ROOT = output/
+All generated files (config, core, locators, pages, tests, test-data) go inside output/.
+Do NOT create a subfolder per scenario. One shared project in output/.
+
 Read agents/02-generator.md for your instructions.
 
 SOURCE FILES:

@@ -24,11 +24,15 @@ Multi-agent AI framework that generates production-ready Playwright test automat
     healer-review.prompt.md  # Healer-Reviewer combined loop
 scenarios/                   # Plain English test scenarios (.md files)
   {folder}/                  # Organized by app/feature (folder parameter)
-output/                      # Generated Playwright projects per scenario
-  {scenario-name}/
-    tests/
-    playwright.config.ts
-    package.json
+output/                      # Shared generated Playwright project (ONE project, all scenarios share it)
+  core/                      # locator-loader.ts, base-page.ts, shared-state.ts
+  locators/                  # Per-page JSON locator files
+  pages/                     # Per-page Page Object classes
+  tests/web/                 # Web test spec files ({scenario}.spec.ts)
+  tests/api/                 # API test spec files
+  test-data/                 # Per-scenario test data JSONs
+  playwright.config.ts       # Shared config
+  package.json               # Shared dependencies
 scout-reports/               # Scout agent DOM inventory reports
 templates/
   config/
@@ -63,12 +67,11 @@ Scenarios are plain English `.md` files. These keywords trigger specific code ge
 ## Commands
 
 ```bash
-# Install dependencies for a generated test project
-cd output/{scenario-name} && npm install
+# Install dependencies for the generated test project
+cd output && npm install
 
-# Run tests
-npx playwright test
-npx playwright test --project=chrome
+# Run a specific scenario's tests
+npx playwright test tests/web/saucedemo-cart-feature.spec.ts --project=chrome
 npx playwright test --grep @smoke              # tag-based filtering
 
 # Run with specific environment
@@ -94,8 +97,8 @@ Default: Chrome only. Add Edge/WebKit per customer need in `playwright.config.ts
 - NEVER modify `.github/agents/` or `.github/prompts/` without understanding the full pipeline. These are carefully tuned prompt engineering artifacts.
 - NEVER commit `.env` files with real credentials. Only `.env.example` with placeholders.
 - Every scenario step MUST produce a corresponding test step in generated code — no step skipping.
-- Generated test projects are self-contained in `output/{scenario-name}/` with their own `package.json` and `playwright.config.ts`.
-- The `folder` parameter organizes scenarios and output by application/feature: `scenarios/{folder}/{scenario}.md` → `output/{folder}/{scenario}/`.
+- All scenarios share a single `output/` project with one `package.json` and one `playwright.config.ts`. Each scenario adds its spec file to `output/tests/web/` (or `tests/api/`), page objects to `output/pages/`, and locators to `output/locators/`. Do NOT create a separate project folder per scenario.
+- The `folder` parameter organizes input scenarios by application/feature: `scenarios/web/{folder}/{scenario}.md`. When folder is provided, agent reports go into `output/{folder}/` and test specs go into `output/tests/web/{folder}/`.
 - Scout reports go to `scout-reports/{scenario}-page-inventory-latest.md` (or `scout-reports/{folder}/{scenario}-page-inventory-latest.md` when folder is provided).
 - All agent reports include the scenario name: `analyst-report-{scenario}.md`, `healer-report-{scenario}.md`, `review-scorecard-{scenario}.md`, `pipeline-summary-{scenario}.md`. When folder is provided, reports go into `output/{folder}/`.
 
