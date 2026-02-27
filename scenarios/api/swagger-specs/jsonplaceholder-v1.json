@@ -1,0 +1,484 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "JSONPlaceholder API",
+    "description": "Free fake and reliable API for testing and prototyping. No authentication required.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "JSONPlaceholder",
+      "url": "https://jsonplaceholder.typicode.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://jsonplaceholder.typicode.com",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/posts": {
+      "get": {
+        "tags": ["Posts"],
+        "summary": "List all posts",
+        "description": "Get all posts. Supports filtering by userId.",
+        "operationId": "listPosts",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "Filter posts by user ID",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Post" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Posts"],
+        "summary": "Create a post",
+        "description": "Create a new post. Note: resource is faked — created on server but not persisted.",
+        "operationId": "createPost",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePostRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Post created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/posts/{id}": {
+      "get": {
+        "tags": ["Posts"],
+        "summary": "Get a post",
+        "description": "Retrieve a single post by ID",
+        "operationId": "getPost",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Post" }
+              }
+            }
+          },
+          "404": {
+            "description": "Post not found"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Posts"],
+        "summary": "Update a post",
+        "description": "Replace an entire post by ID",
+        "operationId": "updatePost",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreatePostRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Post updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Post" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Posts"],
+        "summary": "Patch a post",
+        "description": "Partially update a post by ID",
+        "operationId": "patchPost",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchPostRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Post patched",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Post" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Posts"],
+        "summary": "Delete a post",
+        "description": "Delete a post by ID",
+        "operationId": "deletePost",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Post deleted"
+          }
+        }
+      }
+    },
+    "/posts/{id}/comments": {
+      "get": {
+        "tags": ["Comments"],
+        "summary": "Get comments for a post",
+        "description": "Retrieve all comments for a specific post (nested resource)",
+        "operationId": "getPostComments",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Comment" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/comments": {
+      "get": {
+        "tags": ["Comments"],
+        "summary": "List all comments",
+        "description": "Get all comments. Supports filtering by postId.",
+        "operationId": "listComments",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "query",
+            "description": "Filter comments by post ID",
+            "required": false,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Comment" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "List all users",
+        "description": "Get all users",
+        "operationId": "listUsers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/User" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get a user",
+        "description": "Retrieve a single user by ID",
+        "operationId": "getUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/users/{id}/posts": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get posts by user",
+        "description": "Retrieve all posts authored by a specific user (nested resource)",
+        "operationId": "getUserPosts",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Post" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/todos": {
+      "get": {
+        "tags": ["Todos"],
+        "summary": "List all todos",
+        "description": "Get all todos. Supports filtering by userId and completed status.",
+        "operationId": "listTodos",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "Filter by user ID",
+            "required": false,
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "completed",
+            "in": "query",
+            "description": "Filter by completion status",
+            "required": false,
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Todo" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/todos/{id}": {
+      "get": {
+        "tags": ["Todos"],
+        "summary": "Get a todo",
+        "description": "Retrieve a single todo by ID",
+        "operationId": "getTodo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Todo" }
+              }
+            }
+          },
+          "404": {
+            "description": "Todo not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Post": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "integer", "example": 1 },
+          "id": { "type": "integer", "example": 1 },
+          "title": { "type": "string", "example": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit" },
+          "body": { "type": "string", "example": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto" }
+        },
+        "required": ["userId", "id", "title", "body"]
+      },
+      "CreatePostRequest": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "integer", "example": 1 },
+          "title": { "type": "string", "example": "New Post Title" },
+          "body": { "type": "string", "example": "This is the body of the new post." }
+        },
+        "required": ["userId", "title", "body"]
+      },
+      "PatchPostRequest": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "Updated Title" }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "postId": { "type": "integer", "example": 1 },
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "id labore ex et quam laborum" },
+          "email": { "type": "string", "format": "email", "example": "Eliseo@gardner.biz" },
+          "body": { "type": "string", "example": "laudantium enim quasi est quidem magnam voluptate ipsam eos" }
+        },
+        "required": ["postId", "id", "name", "email", "body"]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "Leanne Graham" },
+          "username": { "type": "string", "example": "Bret" },
+          "email": { "type": "string", "format": "email", "example": "Sincere@april.biz" },
+          "address": {
+            "type": "object",
+            "properties": {
+              "street": { "type": "string", "example": "Kulas Light" },
+              "suite": { "type": "string", "example": "Apt. 556" },
+              "city": { "type": "string", "example": "Gwenborough" },
+              "zipcode": { "type": "string", "example": "92998-3874" },
+              "geo": {
+                "type": "object",
+                "properties": {
+                  "lat": { "type": "string", "example": "-37.3159" },
+                  "lng": { "type": "string", "example": "81.1496" }
+                }
+              }
+            }
+          },
+          "phone": { "type": "string", "example": "1-770-736-8031 x56442" },
+          "website": { "type": "string", "example": "hildegard.org" },
+          "company": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "example": "Romaguera-Crona" },
+              "catchPhrase": { "type": "string", "example": "Multi-layered client-server neural-net" },
+              "bs": { "type": "string", "example": "harness real-time e-markets" }
+            }
+          }
+        },
+        "required": ["id", "name", "username", "email"]
+      },
+      "Todo": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "integer", "example": 1 },
+          "id": { "type": "integer", "example": 1 },
+          "title": { "type": "string", "example": "delectus aut autem" },
+          "completed": { "type": "boolean", "example": false }
+        },
+        "required": ["userId", "id", "title", "completed"]
+      }
+    }
+  }
+}
