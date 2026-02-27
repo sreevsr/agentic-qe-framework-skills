@@ -8,11 +8,11 @@ Write a test scenario in a simple `.md` file describing what to test. Six specia
 
 | Agent | Role | Input | Output |
 |-------|------|-------|--------|
-| **Scout** | Scans application DOM, detects UI component libraries, maps selectors and interaction patterns | Live browser session | `scout-reports/page-inventory-latest.md` |
-| **Analyst (QE Planner)** | Navigates the app in a real browser, discovers elements and validates scenario steps | Scenario `.md` file | `output/analyst-report.md` |
+| **Scout** | Scans application DOM, detects UI component libraries, maps selectors and interaction patterns | Live browser session | `scout-reports/{scenario}-page-inventory-latest.md` |
+| **Analyst (QE Planner)** | Navigates the app in a real browser, discovers elements and validates scenario steps | Scenario `.md` file | `output/analyst-report-{scenario}.md` |
 | **Generator** | Produces Playwright TypeScript framework with Page Objects, locators, and spec files | Analyst report + Scout report | Complete test framework in `output/` |
-| **Healer** | Runs tests, diagnoses failures across 6 root cause categories, fixes code, re-runs (max 3 cycles) | Generated framework | Passing tests + `output/healer-report.md` |
-| **Reviewer** | Audits code quality across 8 dimensions, scores 1-5 per dimension, issues verdict | Generated framework | `output/review-scorecard.md` |
+| **Healer** | Runs tests, diagnoses failures across 6 root cause categories, fixes code, re-runs (max 3 cycles) | Generated framework | Passing tests + `output/healer-report-{scenario}.md` |
+| **Reviewer** | Audits code quality across 8 dimensions, scores 1-5 per dimension, issues verdict | Generated framework | `output/review-scorecard-{scenario}.md` |
 | **API Analyst** | Reads Swagger/OpenAPI specs and auto-generates API scenario files | Swagger JSON | Scenario `.md` files |
 
 ### Agent Pipeline

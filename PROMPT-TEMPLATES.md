@@ -1,7 +1,19 @@
 # Prompt Templates — Complete Enterprise Edition
 
-> Validated Feb 14, 2026 against saucedemo.com and Swagger Petstore API.
-> Copy-paste each prompt exactly as written into GitHub Copilot Chat (Agent mode).
+> **DEPRECATED:** This file contains legacy copy-paste prompts from before the `.agent.md` + `.prompt.md` architecture.
+> The authoritative instructions are now in:
+> - `.github/agents/*.agent.md` — Agent identity and permanent rules
+> - `.github/prompts/*.prompt.md` — Runtime invocation templates with `{{variable}}` substitution
+> - `agents/01-analyst.md` through `agents/04-reviewer.md` — Detailed agent instructions
+>
+> **Key naming changes since this file was written:**
+> - Report files now include the scenario name: `analyst-report-{scenario}.md`, `healer-report-{scenario}.md`, `review-scorecard-{scenario}.md`
+> - When folder is provided, reports go into `output/{folder}/`
+> - Scout reports: `scout-reports/{scenario}-page-inventory-latest.md`
+> - Test specs: `output/tests/{type}/[{folder}/]{scenario}.spec.ts`
+> - The orchestrator handles all pipeline coordination — no need to copy-paste prompts manually.
+>
+> Original validation: Feb 14, 2026 against saucedemo.com and Swagger Petstore API.
 
 ---
 

@@ -6,7 +6,7 @@
 #
 # Prerequisites:
 #   - Claude Code CLI installed (npm install -g @anthropic-ai/claude-code)
-#   - Analyst report already generated (output/analyst-report.md)
+#   - Analyst report already generated (output/analyst-report-{scenario}.md)
 #
 # Usage:
 #   ./run-pipeline.sh <scenario-name> <scenario-type>
@@ -41,8 +41,8 @@ echo "=============================================="
 echo ""
 
 # --- Pre-flight check ---
-if [ "$SCENARIO_TYPE" = "web" ] && [ ! -f "output/analyst-report.md" ]; then
-  echo "❌ ERROR: output/analyst-report.md not found."
+if [ "$SCENARIO_TYPE" = "web" ] && [ ! -f "output/analyst-report-${SCENARIO_NAME}.md" ]; then
+  echo "❌ ERROR: output/analyst-report-${SCENARIO_NAME}.md not found."
   echo "   Run the Analyst agent first in VS Code Copilot Chat:"
   echo "   Select QE Analyst → 'Run scenario: $SCENARIO_NAME'"
   echo ""
@@ -75,8 +75,8 @@ SCENARIO_TYPE = ${SCENARIO_TYPE}
 Read agents/02-generator.md for your instructions.
 
 SOURCE FILES:
-- If SCENARIO_TYPE is web: Read output/analyst-report.md + scenarios/web/${SCENARIO_NAME}.md
-- If SCENARIO_TYPE is web AND scout-reports/page-inventory-latest.md exists: Also read this file for accurate DOM selectors
+- If SCENARIO_TYPE is web: Read output/analyst-report-${SCENARIO_NAME}.md + scenarios/web/${SCENARIO_NAME}.md
+- If SCENARIO_TYPE is web AND scout-reports/${SCENARIO_NAME}-page-inventory-latest.md exists: Also read this file for accurate DOM selectors
 - If SCENARIO_TYPE is api: Read scenarios/api/${SCENARIO_NAME}.md directly
 
 Use templates in templates/core/ and templates/config/ as code patterns.
@@ -130,7 +130,7 @@ SCENARIO_TYPE = ${SCENARIO_TYPE}
 Read agents/03-healer.md for your instructions.
 
 PHASE 1: PRE-FLIGHT VALIDATION
-1. Read the source file: output/analyst-report.md (web) or scenarios/api/${SCENARIO_NAME}.md (api)
+1. Read the source file: output/analyst-report-${SCENARIO_NAME}.md (web) or scenarios/api/${SCENARIO_NAME}.md (api)
 2. Open the test spec: output/tests/${SCENARIO_TYPE}/${SCENARIO_NAME}.spec.ts
 3. Count // STEP N: comments vs total steps in source
 4. If steps are missing: add them
@@ -155,7 +155,7 @@ E. IMPORT ERROR — fix paths
 Apply fix → re-run → repeat (max 3 cycles)
 
 PHASE 5: REPORT
-Save output/healer-report.md with results."
+Save output/healer-report-${SCENARIO_NAME}.md with results."
 
 claude -p "$HEALER_PROMPT" 2>&1 | tee /tmp/healer-output.log
 
@@ -199,7 +199,7 @@ Score these 8 dimensions (1-5 each):
 7. Security — no hardcoded credentials
 8. Configuration — channel: 'chrome', proper reporters
 
-Save output/review-scorecard.md with scores and verdict:
+Save output/review-scorecard-${SCENARIO_NAME}.md with scores and verdict:
 APPROVED (score >= 32, no dimension below 3) or NEEDS FIXES."
 
 claude -p "$REVIEWER_PROMPT" 2>&1 | tee /tmp/reviewer-output.log
@@ -225,21 +225,21 @@ echo "  Scenario:  $SCENARIO_NAME ($SCENARIO_TYPE)"
 echo ""
 echo "  Generated files:"
 echo "    📄 output/tests/${SCENARIO_TYPE}/${SCENARIO_NAME}.spec.ts"
-echo "    📄 output/healer-report.md"
-echo "    📄 output/review-scorecard.md"
+echo "    📄 output/healer-report-${SCENARIO_NAME}.md"
+echo "    📄 output/review-scorecard-${SCENARIO_NAME}.md"
 echo ""
 
 # Show test results if healer report exists
-if [ -f "output/healer-report.md" ]; then
+if [ -f "output/healer-report-${SCENARIO_NAME}.md" ]; then
   echo "  Test Results:"
-  grep -E "passed|failed|PASS|FAIL" output/healer-report.md | head -5
+  grep -E "passed|failed|PASS|FAIL" "output/healer-report-${SCENARIO_NAME}.md" | head -5
   echo ""
 fi
 
 # Show review verdict if scorecard exists
-if [ -f "output/review-scorecard.md" ]; then
+if [ -f "output/review-scorecard-${SCENARIO_NAME}.md" ]; then
   echo "  Review Verdict:"
-  grep -iE "APPROVED|NEEDS FIXES|verdict" output/review-scorecard.md | head -3
+  grep -iE "APPROVED|NEEDS FIXES|verdict" "output/review-scorecard-${SCENARIO_NAME}.md" | head -3
   echo ""
 fi
 
