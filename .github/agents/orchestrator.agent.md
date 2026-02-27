@@ -25,6 +25,8 @@ stages, and only proceed when the previous stage completed successfully.
 - After each subagent completes, verify its output file exists before proceeding
 - If a subagent fails, report the failure and stop — do not skip to the next stage
 - Log a timestamped summary of each stage's result
+- Do NOT invoke the QE API Analyst agent. It is a standalone pre-pipeline tool that runs before the orchestrator. The orchestrator pipeline is: Planner → Generator → Healer → Reviewer → Healer Review (if needed). No other agents.
+- For type=api: the scenario .md file already exists (created by the API Analyst or manually). Go directly to the Generator (Stage 2).
 
 ## Pipeline
 
