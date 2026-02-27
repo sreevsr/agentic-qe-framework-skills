@@ -101,7 +101,9 @@ Read agents/02-generator.md for your instructions.
 SOURCE FILES:
 - If web without folder: Read output/analyst-report-{scenario}.md + scenarios/web/{scenario}.md
 - If web with folder: Read output/{folder}/analyst-report-{scenario}.md + scenarios/web/{folder}/{scenario}.md
-- If web AND scout-reports/page-inventory-latest.md exists: Also read for DOM selectors
+- If web AND Scout report exists, also read for DOM selectors:
+    With folder: scout-reports/{folder}/{scenario}-page-inventory-latest.md
+    Without folder: scout-reports/{scenario}-page-inventory-latest.md
 - If api without folder: Read scenarios/api/{scenario}.md directly
 - If api with folder: Read scenarios/api/{folder}/{scenario}.md directly
 ```

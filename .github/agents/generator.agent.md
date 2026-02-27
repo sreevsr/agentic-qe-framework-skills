@@ -33,7 +33,9 @@ The user will specify the scenario name and type (web or api) when invoking this
 ## Source Files
 
 - If web scenario: Read `output/analyst-report.md` + `scenarios/web/{scenario}.md`
-- If web scenario AND `scout-reports/page-inventory-latest.md` exists: Also read this file for accurate DOM selectors and component interaction patterns
+- If web scenario AND a Scout report exists, also read it for accurate DOM selectors and component interaction patterns:
+  With folder: `scout-reports/{folder}/{scenario}-page-inventory-latest.md`
+  Without folder: `scout-reports/{scenario}-page-inventory-latest.md`
 - If api scenario: Read `scenarios/api/{scenario}.md` directly (no analyst report or Scout report needed)
 - Use templates in `templates/core/` and `templates/config/` as code patterns
 
@@ -88,7 +90,7 @@ For web scenarios, also generate (create if not exists — do not overwrite if a
 
 ## Scout Report Rules (web scenarios only)
 
-Skip if scout-reports/page-inventory-latest.md does not exist:
+Skip if the Scout report does not exist at the resolved path above:
 - PREFER Scout-discovered selectors over analyst-guessed selectors
 - For custom components (Fluent UI ComboBox, etc.): use multi-step interaction pattern from Scout report
 - If Scout flags HIT-AREA MISMATCH: add { force: true } or use ID selector

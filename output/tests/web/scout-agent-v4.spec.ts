@@ -20,9 +20,9 @@
  *   Terminal 2: node remote-control.js
  *              Press S = scan current page | T = scan in 5s | D = done
  *
- * Output:
- *   scout-reports/page-inventory-latest.md   (code-first format)
- *   scout-reports/page-inventory-latest.json  (structured data)
+ * Output (scenario-scoped):
+ *   scout-reports/[appFolder/]{scenarioName}-page-inventory-latest.md   (code-first format)
+ *   scout-reports/[appFolder/]{scenarioName}-page-inventory-latest.json  (structured data)
  */
 
 import { test, Page } from '@playwright/test';
@@ -34,12 +34,24 @@ import * as path from 'path';
 // ============================================================================
 
 const CFG = {
-  startUrl: 'https://react.fluentui.dev',  // ← CHANGE THIS
+  startUrl: 'https://react.fluentui.dev',  // ← CHANGE THIS per app
+  scenarioName: '',   // ← CHANGE THIS to match your scenario filename (e.g., 'saucedemo-cart-feature')
+  appFolder: '',      // ← CHANGE THIS to match your folder (e.g., 'saucedemo'). Leave blank if flat structure.
   outputDir: './scout-reports',
   pageLoadTimeout: 30000,
   pollInterval: 1000,
   sessionTimeout: 900000,   // 15 min max session
 };
+
+// Derive scoped output directory — mirrors scenario folder structure
+const SCOUT_OUTPUT_DIR = CFG.appFolder
+  ? path.join(CFG.outputDir, CFG.appFolder)
+  : CFG.outputDir;
+
+// Derive scoped file base name — one report per scenario
+const SCOUT_FILE_BASE = CFG.scenarioName
+  ? `${CFG.scenarioName}-page-inventory-latest`
+  : 'page-inventory-latest';
 
 const TRIGGER_DIR = CFG.outputDir;
 
@@ -610,8 +622,9 @@ test.describe('Scout Agent v4', () => {
   test('Interactive scan session', async ({ page }) => {
     test.setTimeout(CFG.sessionTimeout);
 
-    // Ensure output directory exists and clear old triggers
+    // Ensure output directories exist and clear old triggers
     fs.mkdirSync(CFG.outputDir, { recursive: true });
+    fs.mkdirSync(SCOUT_OUTPUT_DIR, { recursive: true });
     deleteTrigger(path.join(TRIGGER_DIR, 'SCAN'));
     deleteTrigger(path.join(TRIGGER_DIR, 'DONE'));
 
@@ -694,16 +707,16 @@ test.describe('Scout Agent v4', () => {
     if (allScans.length > 0) {
       const md = generateReport(allScans);
 
-      fs.writeFileSync(path.join(CFG.outputDir, 'page-inventory-latest.md'), md, 'utf-8');
+      fs.writeFileSync(path.join(SCOUT_OUTPUT_DIR, `${SCOUT_FILE_BASE}.md`), md, 'utf-8');
       fs.writeFileSync(
-        path.join(CFG.outputDir, `page-inventory-${new Date().toISOString().replace(/[:.]/g, '-')}.md`),
+        path.join(SCOUT_OUTPUT_DIR, `${SCOUT_FILE_BASE.replace('-latest', '')}-${new Date().toISOString().replace(/[:.]/g, '-')}.md`),
         md, 'utf-8'
       );
-      fs.writeFileSync(path.join(CFG.outputDir, 'page-inventory-latest.json'), JSON.stringify(allScans, null, 2), 'utf-8');
+      fs.writeFileSync(path.join(SCOUT_OUTPUT_DIR, `${SCOUT_FILE_BASE}.json`), JSON.stringify(allScans, null, 2), 'utf-8');
 
-      console.log(`\n📄 Reports saved to: ${path.resolve(CFG.outputDir)}/`);
-      console.log(`   - page-inventory-latest.md`);
-      console.log(`   - page-inventory-latest.json`);
+      console.log(`\n📄 Reports saved to: ${path.resolve(SCOUT_OUTPUT_DIR)}/`);
+      console.log(`   - ${SCOUT_FILE_BASE}.md`);
+      console.log(`   - ${SCOUT_FILE_BASE}.json`);
       console.log(`\n✅ Done! ${allScans.length} scans captured.`);
     } else {
       console.log('\n⚠️ No scans captured.');

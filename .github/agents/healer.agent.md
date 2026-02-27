@@ -63,7 +63,7 @@ On failure, classify root cause:
 - **B. TIMING / LOADING** — Fix: add waitForSelector or waitForLoadState. Never use waitForTimeout.
 - **C. WRONG SELECTOR** — Fix strategy:
   1. Try fallback selectors from locator JSON
-  2. Check scout-reports/page-inventory-latest.md for correct selector
+  2. Check Scout report for correct selector (with folder: scout-reports/{folder}/{scenario}-page-inventory-latest.md, without folder: scout-reports/{scenario}-page-inventory-latest.md)
   3. If custom component, fix interaction pattern (not just selector)
   4. Construct new selector from page snapshot
 - **D. WRONG EXPECTED VALUE** — Fix: update expected value or assertion logic

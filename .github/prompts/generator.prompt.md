@@ -27,7 +27,9 @@ SCENARIO PATH RESOLUTION:
 SOURCE FILES:
 - If SCENARIO_TYPE is web and folder provided: Read output/{{folder}}/analyst-report-{{scenario}}.md + the scenario file at the resolved path above
 - If SCENARIO_TYPE is web and no folder: Read output/analyst-report-{{scenario}}.md + the scenario file at the resolved path above
-- If SCENARIO_TYPE is web AND scout-reports/page-inventory-latest.md exists: Also read this file for accurate DOM selectors and component interaction patterns
+- If SCENARIO_TYPE is web AND a Scout report exists, also read it for accurate DOM selectors and component interaction patterns:
+    With folder: scout-reports/{{folder}}/{{scenario}}-page-inventory-latest.md
+    Without folder: scout-reports/{{scenario}}-page-inventory-latest.md
 - If SCENARIO_TYPE is api: Read the scenario file at the resolved path above directly (no analyst report or Scout report needed)
 
 SHARED FILES — CREATE IF NOT EXISTS:
@@ -87,7 +89,7 @@ NAVIGATION (enterprise apps):
 - For postback apps (ASP.NET WebForms): add waitForLoadState('networkidle') after server round-trips
 - For iframes: use page.frameLocator() before interacting with framed elements
 
-SCOUT REPORT RULES (web scenarios only — skip if scout-reports/page-inventory-latest.md does not exist):
+SCOUT REPORT RULES (web scenarios only — skip if the Scout report does not exist at the resolved path above):
 - PREFER Scout-discovered selectors over analyst-guessed selectors for locator JSONs
 - For custom components (Fluent UI ComboBox, etc.): use multi-step interaction pattern from Scout report
 - If Scout flags HIT-AREA MISMATCH: add { force: true } or use ID selector
