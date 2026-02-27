@@ -62,7 +62,7 @@ Scout (DOM-only page scanner, runs before Analyst)
 
 Scenarios are plain English `.md` files. These keywords trigger specific code generation patterns:
 
-`VERIFY` — mid-step assertion | `CAPTURE` — store runtime value in `{{variable}}` | `CALCULATE` — arithmetic on captured values | `SCREENSHOT` — visual evidence capture | `REPORT` — print captured values to console/report | `SAVE` — write to `shared-state.json` for cross-scenario chaining | `DATASETS` — markdown table for data-driven parameterized runs | `API GET/POST/PUT/DELETE` — API test steps | `Tags:` — tag-based selective execution | `ENV_VARS` — environment-specific variables via `{{ENV.VAR}}` | `---` separator — multiple scenarios in one feature file
+`VERIFY` — mid-step assertion | `CAPTURE` — store runtime value in `{{variable}}` | `CALCULATE` — arithmetic on captured values | `SCREENSHOT` — visual evidence capture | `REPORT` — print captured values to console/report | `SAVE` — write to `shared-state.json` for cross-scenario chaining | `DATASETS` — markdown table for data-driven parameterized runs | `API GET/POST/PUT/DELETE` — API test steps | `Tags:` — tag-based selective execution | `ENV_VARS` — environment-specific variables via `{{ENV.VAR}}` | `---` separator — multiple scenarios in one feature file | `API Behavior` — declares API persistence model: `mock` (non-persistent, Healer may adapt) or `live` (default, Healer guardrails enforced)
 
 ## Commands
 

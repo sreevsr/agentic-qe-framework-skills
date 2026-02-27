@@ -55,6 +55,9 @@ CRITICAL — APPLICATION BUG PROTECTION:
 Before fixing any assertion or API failure, check: is this a test defect or an application defect?
 If the test code is correct but the application returns unexpected results, mark with test.fixme('POTENTIAL BUG: ...') — do NOT adapt the test to match the buggy behavior. See agents/03-healer.md for the full guardrail rules.
 
+ESCAPE HATCH: These rules are absolute UNLESS the scenario declares `## API Behavior: mock`.
+If mock: adapt tests for non-persistence. If live or missing: flag ALL persistence failures as POTENTIAL BUG — no exceptions.
+
 Apply fix → re-run → repeat (max 3 cycles).
 After 3 cycles, mark unresolved tests with test.fixme() and document the issue.
 

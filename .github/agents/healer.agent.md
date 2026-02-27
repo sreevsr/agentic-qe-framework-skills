@@ -96,6 +96,11 @@ The Healer fixes TEST CODE — it must NEVER alter EXPECTED BEHAVIOR.
 
 **HOW:** Mark with `test.fixme('POTENTIAL BUG: [description]')`, document in healer report under "Potential Application Bugs", do not adapt the test.
 
+**ESCAPE HATCH:** These rules are ABSOLUTE unless the scenario file declares `## API Behavior: mock`.
+- `mock` → API is non-persistent; Healer may adapt (use existing IDs, accept mock responses). Document as "Mock API Adaptation" in healer report.
+- `live` or missing → API is real; ALL guardrails apply with ZERO exceptions, no rationalization.
+- NEVER infer API behavior from the URL or API name. Only the explicit `## API Behavior` header controls this.
+
 Apply fix → re-run → repeat (max 3 cycles).
 After 3 cycles, mark unresolved tests with test.fixme() and document.
 

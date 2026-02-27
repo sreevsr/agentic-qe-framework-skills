@@ -176,6 +176,7 @@ Scenarios are plain English `.md` files with structured keywords:
 | `API` | Make API call within web test | Playwright `request` fixture |
 | `Tags` | CI/CD filtering labels | `{ tag: ['@smoke', '@P0'] }` |
 | `{{ENV.VAR}}` | Environment variable | `process.env.VAR` |
+| `API Behavior` | Declare API persistence model | `mock` (Healer may adapt) or `live` (default, guardrails enforced) |
 
 ## Scout Agent v4
 

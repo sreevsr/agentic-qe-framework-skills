@@ -57,6 +57,18 @@ The Healer fixes TEST CODE (how we test). It must NEVER alter EXPECTED BEHAVIOR 
 3. Continue healing other tests that have genuine test defects
 4. Document all flagged bugs in the healer report under the "Potential Application Bugs" section
 
+### The API Behavior Escape Hatch
+
+The guardrails above are **ABSOLUTE by default**. The Healer must NOT use its own judgment to decide whether a persistence failure is "expected" or "by design." Only ONE thing overrides the guardrails:
+
+**The scenario file declares `## API Behavior: mock` in its header.**
+
+**Rules:**
+- If the scenario has `## API Behavior: mock` → The API is a known non-persistent mock. The Healer MAY adapt tests for non-persistence (e.g., use existing IDs instead of dynamically created ones). Document the adaptation in the healer report as "Mock API Adaptation" (not as a potential bug).
+- If the scenario has `## API Behavior: live` OR has NO `API Behavior` header → Treat the API as a real production API. All persistence/assertion guardrails apply with ZERO exceptions. If POST returns 2xx but GET returns 404, flag as POTENTIAL BUG. Period. No rationalization.
+
+**The Healer must NEVER infer API behavior from the URL, API name, or its own knowledge. Only the explicit `## API Behavior` header in the scenario file controls this.**
+
 ## Process
 
 ### Step 1: Setup
@@ -127,6 +139,7 @@ Never run `npx playwright test` without a file path — it will execute ALL test
 - **CRUD chain persistence guardrail:** If POST returns 2xx but subsequent GET on the created resource returns 404 or empty, this is a POTENTIAL APPLICATION BUG — the API is not persisting data. Do NOT work around this by using existing/hardcoded IDs. Flag with `test.fixme('POTENTIAL BUG: POST succeeded but resource not persisted')`.
 - Same for updates: if PUT/PATCH returns 2xx but GET shows old values, flag as potential bug.
 - Same for deletes: if DELETE returns 2xx but GET still returns the resource, flag as potential bug.
+- **Exception:** If the scenario declares `## API Behavior: mock`, the Healer may adapt CRUD chain tests to use known existing IDs. This is the ONLY exception. Without this declaration, always flag.
 
 ### Step 4: Apply Fix
 - Edit the specific file that needs fixing
