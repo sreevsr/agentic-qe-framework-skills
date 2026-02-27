@@ -9,7 +9,8 @@ PLATFORM COMPATIBILITY MODE:
 - DO NOT use git commands or check repository state
 - Self-contained execution mode
 - PROJECT ROOT: path.join(process.cwd(), 'output') — all generated files go here. ONE shared project, not per-scenario.
-- Analyst report: path.join(process.cwd(), 'output', 'analyst-report-{{scenario}}.md')
+- Analyst report (no folder): path.join(process.cwd(), 'output', 'analyst-report-{{scenario}}.md')
+- Analyst report (with folder): path.join(process.cwd(), 'output', '{{folder}}', 'analyst-report-{{scenario}}.md')
 - Test spec (no folder): path.join(process.cwd(), 'output', 'tests', '{{type}}', '{{scenario}}.spec.ts')
 - Test spec (with folder): path.join(process.cwd(), 'output', 'tests', '{{type}}', '{{folder}}', '{{scenario}}.spec.ts')
 ---
