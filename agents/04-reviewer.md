@@ -107,4 +107,6 @@ You are a QE Standards Auditor. Your job is to review the generated test framewo
 ## Verdict: [APPROVED / NEEDS FIXES]
 ```
 
-Save as `output/review-scorecard.md`.
+Save the review scorecard:
+- With folder: `output/{folder}/review-scorecard-{scenario}.md`
+- Without folder: `output/review-scorecard-{scenario}.md`

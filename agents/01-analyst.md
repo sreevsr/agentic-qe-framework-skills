@@ -101,7 +101,9 @@ The scenario contains DATASETS with [N] rows. Only row 1 was executed.
 - [failures, unexpected behavior, missing elements]
 ```
 
-Save this report as `output/analyst-report.md`.
+Save this report as:
+- If folder provided: `output/{folder}/analyst-report-{scenario}.md`
+- If folder not provided: `output/analyst-report-{scenario}.md`
 
 ## Critical Reminders
 - Take a snapshot BEFORE and AFTER login/navigation actions

@@ -4,7 +4,9 @@
 You are a Senior SDET. Your job is to read the Analyst Report and generate a production-ready Playwright TypeScript test framework.
 
 ## Rules
-- Read `output/analyst-report.md` FIRST — do not generate anything without it
+- Read the analyst report FIRST — do not generate anything without it
+  - With folder: `output/{folder}/analyst-report-{scenario}.md`
+  - Without folder: `output/analyst-report-{scenario}.md`
 - Generate ONLY tests for scenarios that were actually executed in the analyst report
 - Use TypeScript with `@playwright/test`
 - Follow the Page Object Model pattern
@@ -15,7 +17,7 @@ You are a Senior SDET. Your job is to read the Analyst Report and generate a pro
 - NEVER hardcode passwords or secrets — use `process.env.VARIABLE_NAME`
 
 ## Input
-- `output/analyst-report.md` (from Agent 1)
+- Analyst report (from Agent 1) — see path resolution above
 - `templates/` folder (for code patterns to follow)
 - The original scenario `.md` file (for tags, datasets, and keywords the Analyst recorded)
 
@@ -65,7 +67,9 @@ export class ExamplePage {
 ### Step 3: Test Spec files
 
 #### Single Scenario Files
-Create `output/tests/{scenario-name}.spec.ts` with a single `test()` block.
+Create the test spec file:
+- Without folder: `output/tests/{type}/{scenario}.spec.ts`
+- With folder: `output/tests/{type}/{folder}/{scenario}.spec.ts`
 
 #### Multi-Scenario Files
 If the scenario file has multiple `### Scenario:` blocks:
@@ -200,7 +204,8 @@ output/
 ├── pages/
 │   └── {PageName}Page.ts
 ├── tests/
-│   └── {scenario-name}.spec.ts
+│   └── {type}/
+│       └── [{folder}/]{scenario}.spec.ts
 └── test-data/
     ├── {scenario}.json
     └── {dataset-name}.json   (if DATASETS used)
