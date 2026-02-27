@@ -23,7 +23,8 @@ Read agents/03-healer.md for your instructions.
 1. Read the source file:
    - If SCENARIO_TYPE is web and folder provided: Read output/{{folder}}/analyst-report-{{scenario}}.md
    - If SCENARIO_TYPE is web and no folder: Read output/analyst-report-{{scenario}}.md
-   - If SCENARIO_TYPE is api: Read scenarios/api/{{scenario}}.md
+   - If SCENARIO_TYPE is api and folder provided: Read scenarios/api/{{folder}}/{{scenario}}.md
+   - If SCENARIO_TYPE is api and no folder: Read scenarios/api/{{scenario}}.md
 2. Open the test spec:
     If folder provided: output/tests/{{type}}/{{folder}}/{{scenario}}.spec.ts
     If folder not provided: output/tests/{{type}}/{{scenario}}.spec.ts

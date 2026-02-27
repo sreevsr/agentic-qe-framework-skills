@@ -14,7 +14,9 @@ You are an API Test Architect. Your job is to read a Swagger/OpenAPI specificati
 
 ## Input
 - A Swagger/OpenAPI spec file (JSON or YAML) — path provided by user
-- Located in `scenarios/api/swagger-specs/` directory
+- The `folder` parameter is optional. Resolve the spec path accordingly:
+  - Without folder: `scenarios/api/swagger-specs/{spec-file}.json`
+  - With folder: `scenarios/api/{folder}/swagger-specs/{spec-file}.json`
 
 ## Generation Process
 
@@ -143,13 +145,24 @@ If the API requires authentication:
 
 ### Step 4: Save Output
 
-Save generated scenario files to:
+Save generated scenario files using the resolved output paths:
+
+**Without folder:**
 ```
 scenarios/api/
 ├── [resource-1]-crud.md        (CRUD + negative tests)
 ├── [resource-2]-crud.md
 ├── auth-setup.md               (if auth required)
 └── api-test-summary.md         (summary of all generated scenarios)
+```
+
+**With folder (e.g., folder=unify):**
+```
+scenarios/api/unify/
+├── [resource-1]-crud.md
+├── [resource-2]-crud.md
+├── auth-setup.md
+└── api-test-summary.md
 ```
 
 Create a summary file:
@@ -181,9 +194,9 @@ Create a summary file:
 The API Analyst produces scenario `.md` files — NOT test code. These files are then fed into the Generator agent (Agent 2) which creates the actual Playwright TypeScript test code.
 
 ```
-You provide:         swagger.json
-API Analyst:         → scenarios/api/pets-crud.md, users-crud.md, etc.
-Generator (Agent 2): → output/tests/pets-crud.spec.ts, users-crud.spec.ts, etc.
+You provide:         swagger.json (+ optional folder parameter)
+API Analyst:         → scenarios/api/[folder/]pets-crud.md, users-crud.md, etc.
+Generator (Agent 2): → output/tests/api/[folder/]pets-crud.spec.ts, users-crud.spec.ts, etc.
 Healer (Agent 3):    → runs and fixes tests
 Reviewer (Agent 4):  → audits quality
 ```

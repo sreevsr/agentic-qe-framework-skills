@@ -17,7 +17,6 @@ handoffs:
 - Use Node.js path.join() for all file paths (never hardcode / or \)
 - DO NOT use git commands or check repository state
 - Self-contained execution mode
-- Output: path.join(process.cwd(), 'output', 'api-analyst-report.md')
 
 # Rules
 
@@ -29,8 +28,21 @@ handoffs:
 
 Read [agents/05-api-analyst.md](agents/05-api-analyst.md) for your detailed instructions.
 
-The user will provide the Swagger spec filename when invoking this agent.
-Read the spec from `scenarios/api/swagger-specs/{spec-file}.json`.
+The user will provide the Swagger spec filename and optionally a folder parameter.
+
+## Path Resolution
+
+SPEC_PATH:
+  If folder provided: `scenarios/api/{folder}/swagger-specs/{spec-file}.json`
+  If folder not provided: `scenarios/api/swagger-specs/{spec-file}.json`
+
+SCENARIO_OUTPUT (per resource):
+  If folder provided: `scenarios/api/{folder}/{resource}-crud.md`
+  If folder not provided: `scenarios/api/{resource}-crud.md`
+
+SUMMARY_FILE:
+  If folder provided: `scenarios/api/{folder}/api-test-summary.md`
+  If folder not provided: `scenarios/api/api-test-summary.md`
 
 ## For Each Resource Group
 
@@ -43,8 +55,8 @@ Read the spec from `scenarios/api/swagger-specs/{spec-file}.json`.
 
 ## Output
 
-Save generated files to scenarios/api/:
-- `scenarios/api/{resource}-crud.md` (one per resource group)
-- `scenarios/api/api-test-summary.md` (summary of all generated scenarios)
+Save generated files:
+- SCENARIO_OUTPUT path for each resource group (`{resource}-crud.md`)
+- SUMMARY_FILE path for the summary (`api-test-summary.md`)
 
 After generating, list all files created with scenario counts.

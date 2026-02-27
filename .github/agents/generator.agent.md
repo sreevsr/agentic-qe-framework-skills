@@ -40,7 +40,8 @@ The user will specify the scenario name and type (web or api) when invoking this
 - If web scenario AND a Scout report exists, also read it for accurate DOM selectors and component interaction patterns:
   With folder: `scout-reports/{folder}/{scenario}-page-inventory-latest.md`
   Without folder: `scout-reports/{scenario}-page-inventory-latest.md`
-- If api scenario: Read `scenarios/api/{scenario}.md` directly (no analyst report or Scout report needed)
+- If api scenario without folder: Read `scenarios/api/{scenario}.md` directly (no analyst report or Scout report needed)
+- If api scenario with folder: Read `scenarios/api/{folder}/{scenario}.md` directly (no analyst report or Scout report needed)
 - Use templates in `templates/core/` and `templates/config/` as code patterns
 
 ## Shared Files — Create If Not Exists

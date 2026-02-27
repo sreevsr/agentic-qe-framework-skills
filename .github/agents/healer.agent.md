@@ -38,7 +38,8 @@ The user will specify the scenario name and type (web or api) when invoking this
 1. Read the source file:
    - Web with folder: output/{folder}/analyst-report-{scenario}.md
    - Web without folder: output/analyst-report-{scenario}.md
-   - API: scenarios/api/{scenario}.md
+   - API without folder: scenarios/api/{scenario}.md
+   - API with folder: scenarios/api/{folder}/{scenario}.md
 2. Open the test spec
 3. Count // STEP N: comments vs total steps in source
 4. If steps missing: add them in correct sequence
