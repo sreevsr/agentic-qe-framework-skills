@@ -7,8 +7,7 @@ handoffs:
   - label: Generate Framework
     agent: QE Generator
     prompt: |
-      The Analyst has completed execution. Read the analyst report at output/analyst-report.md
-      and generate the Playwright test framework.
+      The Analyst has completed execution. Read the analyst report and generate the Playwright test framework.
     send: false
 ---
 
@@ -32,8 +31,9 @@ handoffs:
 
 Read the file [agents/01-analyst.md](agents/01-analyst.md) for your detailed instructions.
 
-Then read the scenario file. The user will specify the scenario name when invoking this agent.
-Look for the scenario in `scenarios/web/` folder.
+Then read the scenario file. The user will specify the scenario name (and optionally a folder) when invoking this agent.
+- If folder provided: `scenarios/web/{folder}/{scenario}.md`
+- If folder not provided: `scenarios/web/{scenario}.md`
 
 Execute every step in the scenario using the Playwright MCP tools listed above.
 Take a page snapshot after each action to confirm the result before moving to the next step.
@@ -47,4 +47,6 @@ Take a page snapshot after each action to confirm the result before moving to th
 
 ## Output
 
-After completing all steps, save your report as `output/analyst-report.md`.
+After completing all steps, save your report as:
+- If folder provided: `output/{folder}/analyst-report-{scenario}.md`
+- If folder not provided: `output/analyst-report-{scenario}.md`

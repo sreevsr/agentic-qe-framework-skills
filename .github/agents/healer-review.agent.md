@@ -25,7 +25,9 @@ The user will specify the scenario name and type (web or api) when invoking this
 
 ## Phase 1: Read Review Report
 
-1. Read `output/review-scorecard.md` completely
+1. Read the review scorecard:
+   - With folder: `output/{folder}/review-scorecard-{scenario}.md`
+   - Without folder: `output/review-scorecard-{scenario}.md`
 2. Extract all issues with scores 0-3
 3. List specific files, line numbers, and issue descriptions
 4. Ignore items scored 4-5
@@ -198,7 +200,7 @@ use: { channel: 'chrome' }
 
 ## Phase 3: APPLY FIXES ───
 
-For each issue in review-scorecard.md:
+For each issue in the review scorecard:
 
 1. Determine which dimension (1-8)
 2. Apply the appropriate fix pattern from Phase 3
@@ -236,7 +238,10 @@ After applying ALL fixes:
 
 3. Run the test suite:
 ```bash
-   npx playwright test tests/{{SCENARIO_TYPE}}/{{SCENARIO_NAME}}.spec.ts --reporter=list
+   # With folder:
+   npx playwright test tests/{type}/{folder}/{scenario}.spec.ts --project=chrome --reporter=list
+   # Without folder:
+   npx playwright test tests/{type}/{scenario}.spec.ts --project=chrome --reporter=list
 ```
    
    All tests MUST still pass. If any fail:
@@ -251,6 +256,10 @@ After applying ALL fixes:
    - Move to next issue
 
 
-## Phase 5: REPORT SCORECARD ───
+## Phase 5: REPORT ───
 
-Save output/healer-review-fixes-report.md — see prompt for format.
+Save the healer review fixes report:
+- With folder: `output/{folder}/healer-review-fixes-report-{scenario}.md`
+- Without folder: `output/healer-review-fixes-report-{scenario}.md`
+
+See prompt for format.

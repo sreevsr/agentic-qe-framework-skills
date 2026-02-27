@@ -7,7 +7,7 @@ handoffs:
   - label: Fix Review Issues
     agent: healer-review
     prompt: |
-      The Reviewer has identified code quality issues. Fix them based on the review scorecard at output/review-scorecard.md.
+      The Reviewer has identified code quality issues. Fix them based on the review scorecard.
     send: false
 ---
 
@@ -65,7 +65,9 @@ Verdict: FAIL if any import points to a non-existent or misnamed file.
 ─── DIMENSION 3: STEP COMPLETENESS ───
 
 Check for:
-- Read the source file (analyst-report.md or scenario .md)
+- Read the source file:
+  With folder: output/{folder}/analyst-report-{scenario}.md or scenarios/{type}/{folder}/{scenario}.md
+  Without folder: output/analyst-report-{scenario}.md or scenarios/{type}/{scenario}.md
 - Count total steps in source vs // STEP N: comments in each spec
 - Identify any dropped, merged, or out-of-sequence steps
 Verdict: FAIL if step count doesn't match or steps are out of order.
@@ -130,7 +132,11 @@ Score each dimension 1-5:
   4 = Good with small improvements possible
   5 = No issues found
 
-Save output/review-scorecard.md with:
+Save the review scorecard:
+- With folder: output/{folder}/review-scorecard-{scenario}.md
+- Without folder: output/review-scorecard-{scenario}.md
+
+Contents:
 - Score per dimension with specific findings
 - Total score out of 40
 - List of every issue found with file path and line reference

@@ -16,8 +16,10 @@ handoffs:
 - Use Node.js path.join() for all file paths (never hardcode / or \)
 - DO NOT use git commands or check repository state
 - Self-contained execution mode
-- Input: path.join(process.cwd(), 'output', 'analyst-report.md')
-- Output: path.join(process.cwd(), 'output', 'tests', 'web', '{feature}.spec.ts')
+- Input (no folder): path.join(process.cwd(), 'output', 'analyst-report-{scenario}.md')
+- Input (with folder): path.join(process.cwd(), 'output', '{folder}', 'analyst-report-{scenario}.md')
+- Output (no folder): path.join(process.cwd(), 'output', 'tests', '{type}', '{scenario}.spec.ts')
+- Output (with folder): path.join(process.cwd(), 'output', 'tests', '{type}', '{folder}', '{scenario}.spec.ts')
 
 # Rules
 
@@ -32,7 +34,8 @@ The user will specify the scenario name and type (web or api) when invoking this
 
 ## Source Files
 
-- If web scenario: Read `output/analyst-report.md` + `scenarios/web/{scenario}.md`
+- If web scenario without folder: Read `output/analyst-report-{scenario}.md` + `scenarios/web/{scenario}.md`
+- If web scenario with folder: Read `output/{folder}/analyst-report-{scenario}.md` + `scenarios/web/{folder}/{scenario}.md`
 - If web scenario AND a Scout report exists, also read it for accurate DOM selectors and component interaction patterns:
   With folder: `scout-reports/{folder}/{scenario}-page-inventory-latest.md`
   Without folder: `scout-reports/{scenario}-page-inventory-latest.md`
@@ -74,7 +77,8 @@ VERIFY: After this step, confirm all three files exist before proceeding to gene
 ## Scenario-Specific Files — Always Recreate
 
 Delete and regenerate only the current scenario's files:
-- Test spec: output/tests/{type}/{scenario}.spec.ts
+- Test spec (no folder): output/tests/{type}/{scenario}.spec.ts
+- Test spec (with folder): output/tests/{type}/{folder}/{scenario}.spec.ts
 - Test data: output/test-data/{type}/{scenario}/
 
 For web scenarios, also generate (create if not exists — do not overwrite if another scenario already created these):
