@@ -104,8 +104,6 @@ Default: Chrome only. Add Edge/WebKit per customer need in `playwright.config.ts
 
 ## What Claude Code Is Used For
 
-> **Note for Copilot Chat agents:** This section is about the Claude Code CLI tool, NOT about you. If you are a QE agent (Orchestrator, Planner, Generator, Healer, Reviewer), ignore this section — follow your `.agent.md` instructions and execute your pipeline stages.
-
 Claude Code assists with:
 - Editing/improving agent prompt files (`.prompt.md`, `.agent.md`)
 - Updating templates (config files, base scaffolds)
@@ -114,7 +112,7 @@ Claude Code assists with:
 - Framework architecture decisions
 - Documentation updates
 
-Claude Code (the CLI tool) does NOT run the agent pipeline — that runs in Copilot Chat with Playwright MCP.
+Claude Code does NOT run the agent pipeline — that runs in Copilot Chat with Playwright MCP.
 
 ## Additional Context
 
