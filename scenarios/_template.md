@@ -33,6 +33,7 @@
 - **SCREENSHOT:** Take visual evidence — `SCREENSHOT: checkout-overview`
 - **REPORT:** Include in test output — `REPORT: Print {{orderNumber}}`
 - **SAVE:** Persist for other scenarios — `SAVE: Write {{id}} to shared-state.json as "key"`
+- **SHARED_DATA:** Load shared reference data — `SHARED_DATA: users, products`
 - **API GET/POST/PUT/PATCH/DELETE:** API call — `API POST: /users with body {...}`
 
 ### Steps:
@@ -49,6 +50,9 @@
 
 ## Expected Results
 - [What should be true at the end]
+
+## SHARED_DATA (optional — reuse cross-scenario reference data)
+SHARED_DATA: users, products
 
 ## Test Data
 | Field | Value |

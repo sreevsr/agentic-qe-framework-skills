@@ -36,3 +36,4 @@ Your instructions come from:
 - **Folder parameter** is optional — organizes scenarios by app/feature
 - **`## API Behavior: mock`** in a scenario header means the API is non-persistent; the Healer may adapt tests
 - **No `API Behavior` header** (or `live`) means guardrails are fully enforced — Healer must flag persistence failures as POTENTIAL BUGs
+- **Shared test data** (`output/test-data/shared/`) holds reusable reference data (users, products, customers) across scenarios. The `SHARED_DATA:` keyword in a scenario tells the Generator which shared files to load. NEVER overwrite or delete shared data files — they are cross-scenario assets. See `agents/02-generator.md` Step 4a for details.

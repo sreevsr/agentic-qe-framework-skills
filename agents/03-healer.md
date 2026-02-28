@@ -34,6 +34,7 @@ The Healer fixes TEST CODE (how we test). It must NEVER alter EXPECTED BEHAVIOR 
 - Add login/auth/navigation steps not present in the source scenario
 - Remove response body field assertions
 - Change CALCULATE expected results
+- Modify files in `test-data/shared/` — shared data is cross-scenario reference data owned by the team, not a single test. If a shared value causes a failure in this scenario, create a scenario-level override in `test-data/{type}/{scenario}.json` instead
 
 ### When to Flag as Potential Application Bug
 

@@ -53,11 +53,19 @@ Only create on the first scenario run:
 - output/tsconfig.json
 - output/.env.example
 
+SHARED TEST DATA — Create If Not Exists:
+- output/test-data/shared/ directory — reusable reference data across scenarios
+- If the scenario uses common data (user credentials, product catalogs, customer info), create shared files here
+- Shared data files: output/test-data/shared/users.json, products.json, customers.json, etc.
+- NEVER overwrite existing shared data files — another scenario already created them
+- See agents/02-generator.md Step 4a for shared data rules and file format
+
 CORE FILES — MANDATORY (non-negotiable):
-These three files MUST exist in output/core/ after generation completes:
+These files MUST exist in output/core/ after generation completes:
 - output/core/base-page.ts
 - output/core/shared-state.ts
 - output/core/locator-loader.ts
+- output/core/test-data-loader.ts (if scenario uses SHARED_DATA or test-data/shared/ exists)
 
 BEFORE generating any other files, run these copy commands:
 
@@ -66,18 +74,21 @@ If templates/core/ exists, copy each missing file:
     if not exist output\core\base-page.ts copy templates\core\base-page.ts output\core\base-page.ts
     if not exist output\core\shared-state.ts copy templates\core\shared-state.ts output\core\shared-state.ts
     if not exist output\core\locator-loader.ts copy templates\core\locator-loader.ts output\core\locator-loader.ts
+    if not exist output\core\test-data-loader.ts copy templates\core\test-data-loader.ts output\core\test-data-loader.ts
   Linux/Mac:
     [ ! -f output/core/base-page.ts ] && cp templates/core/base-page.ts output/core/base-page.ts
     [ ! -f output/core/shared-state.ts ] && cp templates/core/shared-state.ts output/core/shared-state.ts
     [ ! -f output/core/locator-loader.ts ] && cp templates/core/locator-loader.ts output/core/locator-loader.ts
+    [ ! -f output/core/test-data-loader.ts ] && cp templates/core/test-data-loader.ts output/core/test-data-loader.ts
 
 If templates/core/ does NOT exist, generate these files using patterns from agents/02-generator.md.
 
-VERIFY: After this step, confirm all three files exist before proceeding to generate any other files.
+VERIFY: After this step, confirm all core files exist before proceeding to generate any other files.
 
 
 ## Scenario-Specific Files — Always Recreate
 
+NEVER delete output/test-data/shared/ — it contains cross-scenario reference data.
 Delete and regenerate only the current scenario's files:
 - Test spec (no folder): output/tests/{type}/{scenario}.spec.ts
 - Test spec (with folder): output/tests/{type}/{folder}/{scenario}.spec.ts
@@ -111,6 +122,7 @@ Skip if the Scout report does not exist at the resolved path above:
 - SCREENSHOT → page.screenshot() + test.info().attach()
 - SAVE → saveState() calls
 - DATASETS → parameterized for...of loops
+- SHARED_DATA → import loadTestData from core/test-data-loader, load named shared files
 - API steps → Playwright request fixture (not fetch/axios)
 - {{ENV.VARIABLE}} → process.env.VARIABLE
 

@@ -117,7 +117,8 @@ agentic-qe-framework-enterprise/
 │   ├── core/                       ← Source of truth for core files
 │   │   ├── base-page.ts            ← Base page object (battle-hardened)
 │   │   ├── locator-loader.ts       ← Resilient selector engine
-│   │   └── shared-state.ts         ← Cross-scenario state management
+│   │   ├── shared-state.ts         ← Cross-scenario state management
+│   │   └── test-data-loader.ts     ← Shared test data merge utility
 │   └── config/
 │       ├── playwright.config.ts
 │       ├── package.json
@@ -173,6 +174,7 @@ Scenarios are plain English `.md` files with structured keywords:
 | `SCREENSHOT` | Capture page screenshot | `page.screenshot()` + `test.info().attach()` |
 | `SAVE` | Persist state across scenarios | `saveState()` call |
 | `DATASETS` | Data-driven test rows | Parameterized `for...of` loop |
+| `SHARED_DATA` | Load shared reference data | `loadTestData()` from `test-data-loader` |
 | `API` | Make API call within web test | Playwright `request` fixture |
 | `Tags` | CI/CD filtering labels | `{ tag: ['@smoke', '@P0'] }` |
 | `{{ENV.VAR}}` | Environment variable | `process.env.VAR` |
@@ -259,11 +261,35 @@ When the orchestrator delegates to a subagent, it bypasses `.prompt.md` — the 
 
 ### Core Files (Source of Truth)
 
-Three core files in `templates/core/` are copied to `output/core/` on first run and never overwritten:
+Four core files in `templates/core/` are copied to `output/core/` on first run and never overwritten:
 
 - **`base-page.ts`** — Base page object with library-specific interaction methods (Fluent UI ComboBox, MUI Select, etc.)
 - **`locator-loader.ts`** — Resilient selector engine with primary + fallback chain
 - **`shared-state.ts`** — Cross-scenario state management for CAPTURE/SAVE patterns
+- **`test-data-loader.ts`** — Shared test data merge utility for SHARED_DATA keyword
+
+### Shared Test Data
+
+Reusable test data lives in `output/test-data/shared/` and is loaded via the `SHARED_DATA` keyword:
+
+```markdown
+## SHARED_DATA: users, products
+```
+
+This tells the Generator to import `test-data/shared/users.json` and `test-data/shared/products.json`, then merge with scenario-specific data. Scenario values override shared values.
+
+```
+output/test-data/
+├── shared/              ← Cross-scenario reference data (never deleted per scenario)
+│   ├── users.json       # User personas and credentials
+│   └── products.json    # Product catalog with prices
+├── web/
+│   └── {scenario}.json  ← Scenario-specific overrides only
+└── api/
+    └── {scenario}.json
+```
+
+The Healer is forbidden from modifying `test-data/shared/` — if a shared value causes a failure, a scenario-level override is created instead.
 
 ### Locator Strategy
 

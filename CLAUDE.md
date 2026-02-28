@@ -25,12 +25,14 @@ Multi-agent AI framework that generates production-ready Playwright test automat
 scenarios/                   # Plain English test scenarios (.md files)
   {folder}/                  # Organized by app/feature (folder parameter)
 output/                      # Shared generated Playwright project (ONE project, all scenarios share it)
-  core/                      # locator-loader.ts, base-page.ts, shared-state.ts
+  core/                      # locator-loader.ts, base-page.ts, shared-state.ts, test-data-loader.ts
   locators/                  # Per-page JSON locator files
   pages/                     # Per-page Page Object classes
   tests/web/                 # Web test spec files ({scenario}.spec.ts)
   tests/api/                 # API test spec files
-  test-data/                 # Per-scenario test data JSONs
+  test-data/                 # Test data JSONs
+    shared/                  # Cross-scenario reference data (users, products, customers)
+    {type}/{scenario}.json   # Scenario-specific test data
   playwright.config.ts       # Shared config
   package.json               # Shared dependencies
 scout-reports/               # Scout agent DOM inventory reports
@@ -62,7 +64,7 @@ Scout (DOM-only page scanner, runs before Analyst)
 
 Scenarios are plain English `.md` files. These keywords trigger specific code generation patterns:
 
-`VERIFY` — mid-step assertion | `CAPTURE` — store runtime value in `{{variable}}` | `CALCULATE` — arithmetic on captured values | `SCREENSHOT` — visual evidence capture | `REPORT` — print captured values to console/report | `SAVE` — write to `shared-state.json` for cross-scenario chaining | `DATASETS` — markdown table for data-driven parameterized runs | `API GET/POST/PUT/DELETE` — API test steps | `Tags:` — tag-based selective execution | `ENV_VARS` — environment-specific variables via `{{ENV.VAR}}` | `---` separator — multiple scenarios in one feature file | `API Behavior` — declares API persistence model: `mock` (non-persistent, Healer may adapt) or `live` (default, Healer guardrails enforced)
+`VERIFY` — mid-step assertion | `CAPTURE` — store runtime value in `{{variable}}` | `CALCULATE` — arithmetic on captured values | `SCREENSHOT` — visual evidence capture | `REPORT` — print captured values to console/report | `SAVE` — write to `shared-state.json` for cross-scenario chaining | `DATASETS` — markdown table for data-driven parameterized runs | `SHARED_DATA` — load shared reference data from `test-data/shared/` (e.g., `SHARED_DATA: users, products`) | `API GET/POST/PUT/DELETE` — API test steps | `Tags:` — tag-based selective execution | `ENV_VARS` — environment-specific variables via `{{ENV.VAR}}` | `---` separator — multiple scenarios in one feature file | `API Behavior` — declares API persistence model: `mock` (non-persistent, Healer may adapt) or `live` (default, Healer guardrails enforced)
 
 ## Commands
 

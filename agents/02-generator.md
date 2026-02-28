@@ -127,6 +127,14 @@ import { saveState } from '../core/shared-state';
 saveState('lastOrderNumber', orderNumber);
 ```
 
+**SHARED_DATA** → Load shared reference data:
+```typescript
+// SHARED_DATA: users, products
+import { loadTestData } from '../../core/test-data-loader';
+const testData = loadTestData('web/saucedemo-checkout', ['users', 'products']);
+// testData merges shared/users.json + shared/products.json + web/saucedemo-checkout.json
+```
+
 **DATASETS** → Create parameterized tests:
 ```typescript
 import testData from '../test-data/login-datasets.json';
@@ -160,7 +168,60 @@ const headers = { Authorization: `Bearer ${process.env.API_TOKEN}` };
 ```
 
 ### Step 4: Test Data
-- Create `output/test-data/{scenario}.json` with all test inputs
+
+#### 4a: Shared Data (reusable across scenarios)
+
+Check if `output/test-data/shared/` exists. If it does, read the files inside to see what reference data is already available (e.g., `users.json`, `products.json`).
+
+**When to create shared data files:**
+- User personas / login credentials → `test-data/shared/users.json`
+- Product catalogs / item lists → `test-data/shared/products.json`
+- Common customer info (checkout forms, addresses) → `test-data/shared/customers.json`
+- API entity templates (request body shapes) → `test-data/shared/api-entities.json`
+
+**Rules:**
+- Create a shared data file ONLY if the data is genuinely reusable (not scenario-specific expected values)
+- If a shared file already exists, do NOT overwrite it — another scenario already created it
+- If the scenario has a `SHARED_DATA:` line, load the listed shared files (see keyword below)
+- Shared data files go in `output/test-data/shared/` — flat structure, no nesting by type
+
+**Shared data file format:**
+```json
+{
+  "standard": {
+    "username": "standard_user",
+    "password": "secret_sauce"
+  },
+  "locked_out": {
+    "username": "locked_out_user",
+    "password": "secret_sauce"
+  }
+}
+```
+
+#### 4b: Scenario-Specific Data (unique to this scenario)
+
+Create `output/test-data/{type}/{scenario}.json` with values unique to THIS scenario only:
+- Expected calculation results, assertion values
+- Scenario-specific product selections or quantities
+- DATASETS rows
+- Any value that another scenario would NOT reuse as-is
+
+**Do NOT duplicate** values that already exist in shared data files. If `shared/users.json` has the standard user credentials, the scenario JSON should NOT repeat them.
+
+#### 4c: Import Patterns
+
+When shared data is used, specs import via `test-data-loader`:
+```typescript
+import { loadTestData } from '../../core/test-data-loader';
+const testData = loadTestData('web/saucedemo-checkout', ['users', 'products']);
+```
+
+When no shared data is needed (or shared/ doesn't exist), use direct import (backward compatible):
+```typescript
+import testData from '../../test-data/web/saucedemo-checkout.json';
+```
+
 - For DATASETS: create a JSON array with all rows from the dataset table
 - For API tests: create separate request body JSONs if complex
 
@@ -184,6 +245,7 @@ Copy these into `output/core/`:
 - `templates/core/locator-loader.ts`
 - `templates/core/base-page.ts`
 - `templates/core/shared-state.ts` (if any scenario uses SAVE)
+- `templates/core/test-data-loader.ts` (if any scenario uses SHARED_DATA or if `test-data/shared/` exists)
 
 ### Step 8: Package & Config Files
 Copy `templates/config/package.json` and `templates/config/tsconfig.json` into `output/`.
@@ -207,8 +269,11 @@ output/
 │   └── {type}/
 │       └── [{folder}/]{scenario}.spec.ts
 └── test-data/
-    ├── {scenario}.json
-    └── {dataset-name}.json   (if DATASETS used)
+    ├── shared/                  (reusable: users, products, customers)
+    │   ├── users.json
+    │   └── products.json
+    ├── {type}/{scenario}.json   (scenario-specific overrides)
+    └── {dataset-name}.json      (if DATASETS used)
 ```
 
 ## Quality Checks Before Finishing
@@ -227,3 +292,5 @@ output/
 - [ ] CAPTURE steps produce variable assignments with getter methods
 - [ ] SCREENSHOT steps produce `page.screenshot()` + `test.info().attach()`
 - [ ] API steps use Playwright's `request` fixture, not `fetch` or `axios`
+- [ ] If shared data files exist in `test-data/shared/`, scenario JSON does not duplicate them
+- [ ] If `SHARED_DATA` keyword is used, spec imports `loadTestData` from `core/test-data-loader`

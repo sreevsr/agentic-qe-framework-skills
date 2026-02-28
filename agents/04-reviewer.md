@@ -33,6 +33,8 @@ You are a QE Standards Auditor. Your job is to review the generated test framewo
 - [ ] DATASETS produce parameterized `for...of` loops, not duplicated test code
 - [ ] VERIFY steps produce `expect()` assertions inline, not just at the end
 - [ ] Tags formatted correctly: `{ tag: ['@tagName'] }`
+- [ ] If `test-data/shared/` exists: scenario JSONs do not duplicate values already in shared files (e.g., user credentials, product catalogs)
+- [ ] If `SHARED_DATA` keyword is used: spec imports `loadTestData` from `core/test-data-loader` (not direct JSON import)
 - Score: _/5
 
 ### 4. Configuration (Weight: Medium)
@@ -59,7 +61,8 @@ You are a QE Standards Auditor. Your job is to review the generated test framewo
 - [ ] Adding a new page requires only: new locator JSON + new page object + new spec
 - [ ] Changing a selector requires editing only the locator JSON file
 - [ ] Test data changes require no code changes
-- [ ] Framework core (locator-loader, base-page) is generic and reusable
+- [ ] Framework core (locator-loader, base-page, test-data-loader) is generic and reusable
+- [ ] Shared reference data (users, products) lives in `test-data/shared/`, not duplicated per scenario
 - Score: _/5
 
 ### 7. Security (Weight: High)

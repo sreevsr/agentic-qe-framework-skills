@@ -106,7 +106,7 @@ SCENARIO_TYPE = {type}
 FOLDER = {folder}    ← only include this line if folder was provided
 
 PROJECT ROOT = output/
-All generated files (config, core, locators, pages, tests, test-data) go inside output/.
+All generated files (config, core, locators, pages, tests, test-data, test-data/shared) go inside output/.
 Do NOT create a subfolder per scenario. One shared project in output/.
 
 Read agents/02-generator.md for your instructions.
@@ -232,7 +232,7 @@ If the verification command does not confirm the file exists, create it again.
 
 ## Files Generated
 
-{list all files in output/}
+{list all files in output/ — include test-data/shared/ files if they were created}
 ```
 
 ## Important Notes
