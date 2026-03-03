@@ -1,5 +1,5 @@
 # setup-windows.ps1
-# Run this on the Azure Virtual Desktop before the demo
+# Run this on Windows before using the framework
 # Usage: Right-click > Run with PowerShell  OR  powershell -ExecutionPolicy Bypass -File setup-windows.ps1
 
 Write-Host "============================================" -ForegroundColor Cyan
@@ -45,19 +45,15 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "  Playwright Chrome install had issues (may still work with system Chrome)" -ForegroundColor Yellow
 }
 
-# Step 5: Verify VS Code extensions
-Write-Host "[5/5] Checking VS Code..." -ForegroundColor Yellow
+# Step 5: Check Claude Code CLI
+Write-Host "[5/5] Checking Claude Code CLI..." -ForegroundColor Yellow
 try {
-    $codeVersion = code --version 2>$null
-    Write-Host "  VS Code found" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "  Required VS Code extensions:" -ForegroundColor Yellow
-    Write-Host "    - GitHub Copilot (github.copilot)" -ForegroundColor White
-    Write-Host "    - GitHub Copilot Chat (github.copilot-chat)" -ForegroundColor White
-    Write-Host ""
-    Write-Host "  Install via: code --install-extension github.copilot github.copilot-chat" -ForegroundColor White
+    $claudeVersion = claude --version 2>$null
+    Write-Host "  Claude Code found: $claudeVersion" -ForegroundColor Green
 } catch {
-    Write-Host "  VS Code not found in PATH (may still be installed)" -ForegroundColor Yellow
+    Write-Host "  Claude Code CLI not found." -ForegroundColor Yellow
+    Write-Host "  Install from: https://claude.ai/code" -ForegroundColor Yellow
+    Write-Host "  After installing, restart this script to verify." -ForegroundColor Yellow
 }
 
 Write-Host ""

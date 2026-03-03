@@ -1,68 +1,65 @@
-# Feature: Posts CRUD Operations
+# Feature: Posts CRUD
 
 ## API Base URL: https://jsonplaceholder.typicode.com
-## API Behavior: mock
+## API Behavior: live
 
 ---
 
 ### Scenario: POST /posts — Create Post
 **Tags:** api, posts, smoke, P0
 
-1. API POST: /posts with body {"userId": 1, "title": "Automated Test Post", "body": "This is a test post created by the QE automation framework."}
+1. API POST: /posts with body {"userId": 1, "title": "Automated Test Post", "body": "This post was created by the API test framework."}
 2. VERIFY: Response status is 201
 3. VERIFY: Response has fields: id, userId, title, body
 4. VERIFY: Response $.title equals "Automated Test Post"
 5. CAPTURE: Response $.id as {{postId}}
-6. SAVE: {{postId}} to test-data/shared-state.json as "lastPostId"
-7. REPORT: Print "Created post with ID: {{postId}}"
+6. SAVE: {{postId}} to shared-state.json as "lastPostId"
+7. REPORT: Print "Created post with id={{postId}}"
 
 ---
 
 ### Scenario: GET /posts/{id} — Retrieve Post
 **Tags:** api, posts, smoke, P0
-**Depends On:** POST /posts (needs: postId)
 
-1. Read {{postId}} from test-data/shared-state.json key "lastPostId"
-2. API GET: /posts/{{postId}}
-3. VERIFY: Response status is 200
-4. VERIFY: Response $.id equals {{postId}}
-5. VERIFY: Response has fields: id, userId, title, body
-6. REPORT: Print "Retrieved post: {{postId}}"
-
----
-
-### Scenario: PUT /posts/{id} — Update Entire Post
-**Tags:** api, posts, regression, P1
-
-1. Read {{postId}} from test-data/shared-state.json key "lastPostId"
-2. API PUT: /posts/{{postId}} with body {"userId": 1, "title": "Updated Post Title", "body": "This post has been updated via PUT request."}
-3. VERIFY: Response status is 200
-4. VERIFY: Response $.title equals "Updated Post Title"
-5. VERIFY: Response $.body contains "updated via PUT"
-6. CAPTURE: Response $.id as {{updatedPostId}}
-7. REPORT: Print "Updated post {{updatedPostId}} successfully"
+1. API GET: /posts/1
+2. VERIFY: Response status is 200
+3. VERIFY: Response has fields: userId, id, title, body
+4. VERIFY: Response $.id equals 1
+5. VERIFY: Response $.userId is an integer
+6. CAPTURE: Response $.title as {{postTitle}}
+7. REPORT: Print "Retrieved post title={{postTitle}}"
 
 ---
 
-### Scenario: PATCH /posts/{id} — Partially Update Post
+### Scenario: PUT /posts/{id} — Update Post
 **Tags:** api, posts, regression, P1
 
-1. Read {{postId}} from test-data/shared-state.json key "lastPostId"
-2. API PATCH: /posts/{{postId}} with body {"title": "Patched Title Only"}
-3. VERIFY: Response status is 200
-4. VERIFY: Response $.title equals "Patched Title Only"
-5. VERIFY: Response has fields: id, title
-6. REPORT: Print "Patched post title successfully"
+1. API PUT: /posts/1 with body {"userId": 1, "title": "Updated Post Title", "body": "This post body has been updated by API test."}
+2. VERIFY: Response status is 200
+3. VERIFY: Response $.title equals "Updated Post Title"
+4. VERIFY: Response $.body equals "This post body has been updated by API test."
+5. VERIFY: Response $.userId equals 1
+6. REPORT: Print "Updated post 1 successfully"
+
+---
+
+### Scenario: PATCH /posts/{id} — Partial Update Post
+**Tags:** api, posts, regression, P1
+
+1. API PATCH: /posts/1 with body {"title": "Patched Title Only"}
+2. VERIFY: Response status is 200
+3. VERIFY: Response $.title equals "Patched Title Only"
+4. VERIFY: Response $.id equals 1
+5. REPORT: Print "Patched post 1 title successfully"
 
 ---
 
 ### Scenario: DELETE /posts/{id} — Delete Post
 **Tags:** api, posts, regression, P1
 
-1. Read {{postId}} from test-data/shared-state.json key "lastPostId"
-2. API DELETE: /posts/{{postId}}
-3. VERIFY: Response status is 200
-4. REPORT: Print "Deleted post {{postId}} successfully"
+1. API DELETE: /posts/1
+2. VERIFY: Response status is 200
+3. REPORT: Print "Deleted post 1"
 
 ---
 
@@ -72,9 +69,9 @@
 1. API GET: /posts
 2. VERIFY: Response status is 200
 3. VERIFY: Response is an array
-4. CAPTURE: Response array length as {{totalPosts}}
-5. VERIFY: {{totalPosts}} is greater than 0
-6. VERIFY: Response[0] has fields: id, userId, title, body
+4. VERIFY: Response array length is 100
+5. VERIFY: Each item has fields: userId, id, title, body
+6. CAPTURE: Response array length as {{totalPosts}}
 7. REPORT: Print "Found {{totalPosts}} posts"
 
 ---
@@ -85,67 +82,69 @@
 1. API GET: /posts?userId=1
 2. VERIFY: Response status is 200
 3. VERIFY: Response is an array
-4. CAPTURE: Response array length as {{userPosts}}
-5. VERIFY: {{userPosts}} is greater than 0
-6. VERIFY: Response[0].userId equals 1
-7. REPORT: Print "User 1 has {{userPosts}} posts"
+4. VERIFY: Response array length is 10
+5. VERIFY: Every item $.userId equals 1
+6. CAPTURE: Response array length as {{userPostCount}}
+7. REPORT: Print "User 1 has {{userPostCount}} posts"
 
 ---
 
-### Scenario: GET /posts/{id}/comments — Get Post Comments
-**Tags:** api, posts, comments, regression, P1
+### Scenario: GET /posts/{id}/comments — Get Comments for Post
+**Tags:** api, posts, regression, P1
 
 1. API GET: /posts/1/comments
 2. VERIFY: Response status is 200
 3. VERIFY: Response is an array
-4. CAPTURE: Response array length as {{commentCount}}
-5. VERIFY: {{commentCount}} is greater than 0
-6. VERIFY: Response[0] has fields: postId, id, name, email, body
-7. VERIFY: Response[0].postId equals 1
+4. VERIFY: Response array length is 5
+5. VERIFY: Every item $.postId equals 1
+6. VERIFY: Each item has fields: postId, id, name, email, body
+7. CAPTURE: Response array length as {{commentCount}}
 8. REPORT: Print "Post 1 has {{commentCount}} comments"
 
 ---
 
-### Scenario: POST /posts — Missing Required Field (Negative)
+### Scenario: GET /posts/{id} — Non-Existent Post (404)
 **Tags:** api, posts, regression, P1
 
-1. API POST: /posts with body {"userId": 1, "body": "Missing title field"}
-2. VERIFY: Response status is 400 or 500
-3. REPORT: Print "Missing required field validation: status code received"
-
----
-
-### Scenario: GET /posts/{id} — Non-Existent Post (Negative)
-**Tags:** api, posts, regression, P1
-
-1. API GET: /posts/999999
+1. API GET: /posts/99999
 2. VERIFY: Response status is 404
-3. REPORT: Print "Non-existent post returned 404 as expected"
+3. REPORT: Print "Correctly received 404 for non-existent post"
 
 ---
 
-### Scenario: PUT /posts/{id} — Invalid Data Type (Negative)
-**Tags:** api, posts, regression, P1
+### Scenario: POST /posts — Missing Required Field
+**Tags:** api, posts, regression, P2
 
-1. API PUT: /posts/1 with body {"userId": "invalid_string", "title": "Test", "body": "Test body"}
-2. VERIFY: Response status is 400 or 500
-3. REPORT: Print "Invalid data type validation triggered"
+1. API POST: /posts with body {"userId": 1, "title": "Post Without Body"}
+2. VERIFY: Response status is 201
+3. VERIFY: Response has field: id
+4. REPORT: Print "JSONPlaceholder accepts partial data (mock API)"
 
 ---
 
-### Scenario: POST /posts — Multiple Valid Posts (Data-Driven)
+### Scenario: POST /posts — Invalid Data Type for userId
+**Tags:** api, posts, regression, P2
+
+1. API POST: /posts with body {"userId": "not-a-number", "title": "Invalid Type Test", "body": "Testing invalid userId type"}
+2. VERIFY: Response status is 201
+3. VERIFY: Response has field: id
+4. REPORT: Print "JSONPlaceholder accepts any type (mock API, no server validation)"
+
+---
+
+### Scenario: POST /posts — Various Valid Inputs
 **Tags:** api, posts, regression, P2
 
 ## DATASETS
-| userId | title | body | expectedStatus |
-|--------|-------|------|----------------|
-| 1 | "Test Post Alpha" | "Alpha content" | 201 |
-| 2 | "Test Post Beta" | "Beta content" | 201 |
-| 3 | "Test Post Gamma" | "Gamma content" | 201 |
+| userId | title                  | body                              | expectedStatus |
+|--------|------------------------|-----------------------------------|----------------|
+| 1      | First Test Post        | Body for first test post          | 201            |
+| 2      | Second Test Post       | Body for second test post         | 201            |
+| 5      | Enterprise QE Post     | Testing data-driven API scenarios | 201            |
+| 10     | Final User Post        | Last user creates a post          | 201            |
 
-1. API POST: /posts with body {"userId": {{userId}}, "title": {{title}}, "body": {{body}}}
+1. API POST: /posts with body {"userId": {{userId}}, "title": "{{title}}", "body": "{{body}}"}
 2. VERIFY: Response status is {{expectedStatus}}
-3. VERIFY: Response $.userId equals {{userId}}
-4. VERIFY: Response $.title equals {{title}}
-5. CAPTURE: Response $.id as {{createdId}}
-6. REPORT: Print "Created post {{createdId}} for user {{userId}}"
+3. VERIFY: Response has fields: id, userId, title, body
+4. CAPTURE: Response $.id as {{createdId}}
+5. REPORT: Print "Created post {{createdId}} for userId={{userId}}"

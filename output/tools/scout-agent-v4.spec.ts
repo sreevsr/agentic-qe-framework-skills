@@ -15,9 +15,9 @@
  *   - Selector priority: data-testid → data-automation-id → id → role+aria → class → tag
  *   - Compact code-first output format (v4)
  *
- * How it works:
- *   Terminal 1: npx playwright test tests/web/scout-agent-v4.spec.ts --project=chrome --headed --reporter=list
- *   Terminal 2: node remote-control.js
+ * How it works (run both from the output/ directory):
+ *   Terminal 1: npx playwright test tools/scout-agent-v4.spec.ts --project=chrome --headed --reporter=list
+ *   Terminal 2: node tools/remote-control.js
  *              Press S = scan current page | T = scan in 5s | D = done
  *
  * Output (scenario-scoped):
@@ -638,7 +638,7 @@ test.describe('Scout Agent v4', () => {
     console.log('║                Kendo + ARIA fallback                         ║');
     console.log('║   40+ Component Patterns | Iframe Probing | Hit-Area Detect ║');
     console.log('║                                                              ║');
-    console.log('║   In Terminal 2, run:  node remote-control.js                ║');
+    console.log('║   In Terminal 2, run:  node tools/remote-control.js         ║');
     console.log('║   Press S = scan  |  T = scan in 5s  |  D = done            ║');
     console.log('╚══════════════════════════════════════════════════════════════╝\n');
 

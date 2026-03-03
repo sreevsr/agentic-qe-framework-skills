@@ -27,9 +27,14 @@ output/**/playwright-report/
 output/**/blob-report/
 
 
-# Scout reports
+# Scout reports (root level and inside output/)
 scout-reports/*.md
 scout-reports/*.json
+output/scout-reports/
+
+# Stray Playwright screenshots (extensionless, captured at repo root)
+checkout-overview
+order-confirmation
 
 # Logs and temp
 *.log

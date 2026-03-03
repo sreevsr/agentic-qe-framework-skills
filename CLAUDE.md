@@ -1,123 +1,161 @@
-# Agentic QE Test Automation Framework
+# Agentic QE Framework — Skills Architecture
 
-Multi-agent AI framework that generates production-ready Playwright test automation from plain English scenarios. Built for enterprise QE consulting engagements.
+AI-powered test automation framework that converts plain English scenarios into production-ready Playwright TypeScript tests. Skills-based architecture with composable, self-contained skill files.
 
 ## Tech Stack
 
 - **Runtime:** Node.js 18+ / TypeScript
 - **Test Engine:** Playwright
-- **AI Pipeline:** GitHub Copilot Chat (agent mode) with Playwright MCP Server
-- **IDE:** VS Code
-- **OS:** Windows 11 (primary), Linux Mint (secondary)
+- **AI Pipeline:** Claude Code with composable skills
+- **MCP:** Playwright MCP Server (browser automation for Analyst stage)
 
 ## Project Structure
 
 ```
-.github/
-  agents/
-    orchestrator.agent.md    # Pipeline orchestrator (Copilot custom agent)
-  prompts/
-    analyst.prompt.md        # Agent 1: Browser exploration + element discovery
-    generator.prompt.md      # Agent 2: Playwright test code generation
-    healer.prompt.md         # Agent 3: Test execution + auto-fix failures
-    reviewer.prompt.md       # Agent 4: Code quality audit + scorecard
-    healer-review.prompt.md  # Healer-Reviewer combined loop
-scenarios/                   # Plain English test scenarios (.md files)
-  {folder}/                  # Organized by app/feature (folder parameter)
-output/                      # Shared generated Playwright project (ONE project, all scenarios share it)
-  core/                      # locator-loader.ts, base-page.ts, shared-state.ts, test-data-loader.ts
-  locators/                  # Per-page JSON locator files
-  pages/                     # Per-page Page Object classes
-  tests/web/                 # Web test spec files ({scenario}.spec.ts)
-  tests/api/                 # API test spec files
-  test-data/                 # Test data JSONs
-    shared/                  # Cross-scenario reference data (users, products, customers)
-    {type}/{scenario}.json   # Scenario-specific test data
-  playwright.config.ts       # Shared config
-  package.json               # Shared dependencies
-scout-reports/               # Scout agent DOM inventory reports
-templates/
-  config/
-    playwright.config.ts     # Base Playwright config template
-    .env.dev / .env.qa / .env.staging  # Environment configs
+skills/                          # Composable skill definitions (self-contained)
+  _shared/                       # keyword-reference.md only (loaded during spec generation)
+  _reference/                    # Human reference docs — NOT loaded by LLM at runtime
+  analyst/                       # Browser-based scenario execution
+  generator/                     # Code generation (8 skills)
+  healer/                        # Test healing (7 skills)
+  reviewer/                      # Quality audit (9 skills)
+  healer-review/                 # Review fix application (9 skills)
+  api-analyst/                   # Swagger → scenario generation
+  scout/                         # DOM reconnaissance
+scenarios/                       # Plain English test scenarios (.md files)
+  web/                           # Web UI scenarios (with optional {folder}/ subfolders)
+  api/                           # API scenarios (with optional {folder}/ subfolders)
+templates/                       # Source of truth for core framework files
+  core/                          # locator-loader.ts, base-page.ts, shared-state.ts, test-data-loader.ts
+  config/                        # playwright.config.ts, package.json, tsconfig.json
+output/                          # Shared generated Playwright project (ONE project, all scenarios)
 ```
 
-## Agent Pipeline
+## Running the Pipeline
 
-The 5-agent pipeline runs in GitHub Copilot Chat (not Claude Code). Do NOT modify the pipeline execution logic — Claude Code is used for framework development only.
+Invoke with: `scenario={name} type={web|api|hybrid} [folder={subfolder}]`
+
+### Pipeline Stages
 
 ```
-Analyst → Generator → Healer → Reviewer
-                                    ↑
-API Analyst (for Swagger-based tests)
-Scout (DOM-only page scanner, runs before Analyst)
+Web:    Analyst → Generator → Healer → Reviewer → [Healer-Review if needed]
+API:    Generator → Healer → Reviewer → [Healer-Review if needed]
+Hybrid: Analyst → Generator → Healer → Reviewer → [Healer-Review if needed]
 ```
 
-**Agent 1 — Analyst:** Opens browser via Playwright MCP, executes scenario steps, discovers UI elements, produces `analyst-report-{scenario}.md`.
-**Agent 2 — Generator:** Reads analyst report + scenario → generates complete Playwright TypeScript project.
-**Agent 3 — Healer:** Runs the scenario's spec file, diagnoses failures, auto-fixes, re-runs (up to 3 cycles). Produces `healer-report-{scenario}.md`.
-**Agent 4 — Reviewer:** Audits generated code against 8 QE dimensions, produces `review-scorecard-{scenario}.md`.
-**Agent 5 — API Analyst:** Reads Swagger/OpenAPI spec → auto-generates API scenario files.
-**Scout Agent:** DOM-only page scanner with 67 UI component patterns across 7 library families (Fluent UI v8/v9, MUI, Ant Design, PrimeNG, Bootstrap, Kendo, native HTML).
+### Stage 1: Analyst (skip if type=api)
 
-## Scenario Format — Keywords
+Read and execute `skills/analyst/analyze-scenario.md`.
+Execute scenario in browser via Playwright MCP, discover elements, produce analyst report.
+Verify: analyst report exists before proceeding.
 
-Scenarios are plain English `.md` files. These keywords trigger specific code generation patterns:
+### Stage 2: Generator
 
-`VERIFY` — mid-step assertion | `CAPTURE` — store runtime value in `{{variable}}` | `CALCULATE` — arithmetic on captured values | `SCREENSHOT` — visual evidence capture | `REPORT` — print captured values to console/report | `SAVE` — write to `shared-state.json` for cross-scenario chaining | `DATASETS` — markdown table for data-driven parameterized runs | `SHARED_DATA` — load shared reference data from `test-data/shared/` (e.g., `SHARED_DATA: users, products`) | `API GET/POST/PUT/DELETE` — API test steps | `Tags:` — tag-based selective execution | `ENV_VARS` — environment-specific variables via `{{ENV.VAR}}` | `---` separator — multiple scenarios in one feature file | `API Behavior` — declares API persistence model: `mock` (non-persistent, Healer may adapt) or `live` (default, Healer guardrails enforced)
+Execute skills one at a time. Read each skill, complete it fully, verify its output, then proceed:
+
+1. Read and execute `skills/generator/setup-framework.md`
+   Verify: `output/core/`, `output/playwright.config.ts`, `output/package.json` exist
+
+2. Read and execute `skills/generator/setup-test-data.md`
+   Verify: test-data files created
+
+3. Read and execute `skills/generator/discover-helpers.md` (web/hybrid only)
+   Verify: helper registry noted (in-memory, used by spec generation)
+
+4. Read and execute `skills/generator/generate-locators.md` (web/hybrid only)
+   Verify: `output/locators/*.locators.json` files exist
+
+5. Read and execute `skills/generator/generate-pages.md` (web/hybrid only)
+   Verify: `output/pages/*Page.ts` files exist
+
+6. Read `skills/_shared/keyword-reference.md` for keyword→TypeScript patterns, then
+   read and execute the spec skill for your type:
+   - `type=web` → `skills/generator/generate-web-spec.md`
+   - `type=api` → `skills/generator/generate-api-spec.md`
+   - `type=hybrid` → `skills/generator/generate-hybrid-spec.md`
+   Verify: test spec file exists at the correct path
+
+7. Read and execute `skills/generator/generate-report.md`
+   Verify: `output/generator-report-{scenario}.md` exists
+
+### Stage 3: Healer
+
+Read and execute `skills/healer/heal-loop.md`.
+It orchestrates its sub-skills internally (pre-flight → run → diagnose → fix → repeat → report).
+Each sub-skill is self-contained — no shared files needed.
+Verify: healer report exists. Record pass/fail/fixme counts.
+
+### Stage 4: Reviewer
+
+Execute each dimension review one at a time:
+
+1. Read and execute `skills/reviewer/review-locator-quality.md` (skip for API-only)
+2. Read and execute `skills/reviewer/review-wait-strategy.md`
+3. Read and execute `skills/reviewer/review-test-architecture.md`
+4. Read and execute `skills/reviewer/review-configuration.md`
+5. Read and execute `skills/reviewer/review-code-quality.md`
+6. Read and execute `skills/reviewer/review-maintainability.md`
+7. Read and execute `skills/reviewer/review-security.md`
+8. Read and execute `skills/reviewer/review-api-quality.md` (skip for web-only)
+9. Read and execute `skills/reviewer/aggregate-scorecard.md` — combines all scores, issues verdict.
+
+Verify: scorecard exists. Read verdict: APPROVED or NEEDS FIXES.
+
+### Stage 5: Healer-Review (only if verdict = NEEDS FIXES)
+
+Read scorecard. For each dimension with score <= 3, read and execute the matching fix skill:
+- `skills/healer-review/fix-locator-quality.md`
+- `skills/healer-review/fix-wait-strategy.md`
+- `skills/healer-review/fix-test-architecture.md`
+- `skills/healer-review/fix-configuration.md`
+- `skills/healer-review/fix-code-quality.md`
+- `skills/healer-review/fix-maintainability.md`
+- `skills/healer-review/fix-security.md`
+- `skills/healer-review/fix-api-quality.md`
+
+Then: Read and execute `skills/healer-review/validate-fixes.md`.
+Verify: report exists, tests still pass.
+
+### Final Step: Pipeline Summary
+
+Read and execute `skills/generator/generate-pipeline-summary.md`.
+Reads all stage reports (analyst, generator, healer, reviewer, healer-review if applicable) and produces a single summary.
+Verify: `output/pipeline-summary-{scenario}.md` exists. This is the LAST file written in every pipeline run.
+
+### Standalone: API Analyst
+
+Read `skills/api-analyst/generate-api-scenarios.md`. Input: Swagger spec. Output: scenario `.md` files. Then run the API pipeline (Stages 2-5).
+
+## Type Routing
+
+| Type | Analyst | Locators/Pages | Spec Skill | Fixtures | Reviewer Dims |
+|------|---------|---------------|------------|----------|--------------|
+| `web` | Yes | Yes | `generate-web-spec` | `{ page }` | 1-7 |
+| `api` | No | No | `generate-api-spec` | `{ request }` | 2-8 |
+| `hybrid` | Yes | Yes | `generate-hybrid-spec` | `{ page, request }` | 1-8 (all) |
+
+## Critical Rules
+
+- NEVER modify `*.helpers.ts` files in `output/pages/` — team-owned
+- NEVER modify files in `output/test-data/shared/` — team-owned
+- NEVER commit `.env` files with real credentials
+- NEVER use `waitForTimeout()` — use proper Playwright waits
+- NEVER hardcode selectors in page objects or specs — all via LocatorLoader + JSON
+- All scenarios share one `output/` project — do NOT create per-scenario projects
+- Run ONLY the current scenario's spec file — never `npx playwright test` without a path
+- Every scenario step MUST produce a corresponding test step — no step skipping
 
 ## Commands
 
 ```bash
-# Install dependencies for the generated test project
-cd output && npm install
-
-# Run a specific scenario's tests
-npx playwright test tests/web/saucedemo-cart-feature.spec.ts --project=chrome
-npx playwright test --grep @smoke              # tag-based filtering
-
-# Run with specific environment
-ENV_FILE=.env.qa npx playwright test
-
-# View HTML report
-npx playwright show-report
-
-# Scout agent (via Copilot Chat slash command)
-/scout scenarioName=unify-user-photos
+cd output && npm install                          # Install dependencies
+npx playwright test tests/web/{scenario}.spec.ts --project=chrome  # Run scenario
+npx playwright test --grep @smoke                 # Tag-based filtering
+npx playwright show-report                        # View HTML report
 ```
 
-## Multi-Environment Configuration
+## MCP Extensibility
 
-Three environments supported: DEV, QA, STAGING. Each has `.env.{env}` files in `templates/config/`. The `playwright.config.ts` template reads `ENV_FILE` to load the correct config. Credentials use `{{ENV.TEST_USERNAME}}` placeholders — NEVER hardcode credentials.
-
-## Multi-Browser Support
-
-Default: Chrome only. Add Edge/WebKit per customer need in `playwright.config.ts` projects array. Healer always runs single-browser (Chrome) for fast fix cycles. Cross-browser runs belong in CI/CD.
-
-## IMPORTANT Rules
-
-- NEVER modify `.github/agents/` or `.github/prompts/` without understanding the full pipeline. These are carefully tuned prompt engineering artifacts.
-- NEVER commit `.env` files with real credentials. Only `.env.example` with placeholders.
-- Every scenario step MUST produce a corresponding test step in generated code — no step skipping.
-- All scenarios share a single `output/` project with one `package.json` and one `playwright.config.ts`. Each scenario adds its spec file to `output/tests/web/` (or `tests/api/`), page objects to `output/pages/`, and locators to `output/locators/`. Do NOT create a separate project folder per scenario.
-- The `folder` parameter organizes input scenarios by application/feature: `scenarios/web/{folder}/{scenario}.md`. When folder is provided, agent reports go into `output/{folder}/` and test specs go into `output/tests/web/{folder}/`.
-- Scout reports go to `scout-reports/{scenario}-page-inventory-latest.md` (or `scout-reports/{folder}/{scenario}-page-inventory-latest.md` when folder is provided).
-- All agent reports include the scenario name: `analyst-report-{scenario}.md`, `healer-report-{scenario}.md`, `review-scorecard-{scenario}.md`, `pipeline-summary-{scenario}.md`. When folder is provided, reports go into `output/{folder}/`.
-
-## What Claude Code Is Used For
-
-Claude Code assists with:
-- Editing/improving agent prompt files (`.prompt.md`, `.agent.md`)
-- Updating templates (config files, base scaffolds)
-- Adding new keywords/patterns to the scenario format
-- Debugging test generation issues
-- Framework architecture decisions
-- Documentation updates
-
-Claude Code does NOT run the agent pipeline — that runs in Copilot Chat with Playwright MCP.
-
-## Additional Context
-
-- @README.md for setup instructions and quick start guide
-- @templates/config/playwright.config.ts for the base config template
-- @.gitignore for excluded files
+Current: Playwright MCP (browser automation for Analyst). Future extensions require only new skill files — no existing skill modifications:
+- Appium MCP → `skills/analyst/analyze-scenario-mobile.md`
+- Database MCP → `skills/generator/generate-db-assertions.md`
