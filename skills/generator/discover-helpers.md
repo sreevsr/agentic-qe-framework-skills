@@ -3,8 +3,11 @@
 ## Purpose
 Scan for team-maintained helper files (`*.helpers.ts`) and build an in-memory registry of available helper classes, methods, and scenario triggers. This registry informs spec generation.
 
-## References
-- `skills/_shared/guardrails.md` — helper file protection (read-only)
+## Paths
+- Helper files: `output/pages/{PageName}Page.helpers.ts`
+
+## Rules
+- **NEVER create, modify, or delete `*.helpers.ts` files.** Read-only discovery. These files are team-owned.
 
 ## Process
 

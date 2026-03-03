@@ -3,8 +3,10 @@
 ## Purpose
 Combine scores from all 8 review dimensions into a final scorecard and issue a verdict: APPROVED or NEEDS FIXES.
 
-## References
-- `skills/_shared/path-resolution.md` — `REVIEW_SCORECARD` path
+## Paths
+Scorecard output:
+- With folder: `output/{folder}/review-scorecard-{scenario}.md`
+- Without folder: `output/review-scorecard-{scenario}.md`
 
 ## Input
 Scores and findings from all dimension reviews:

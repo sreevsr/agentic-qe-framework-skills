@@ -3,8 +3,10 @@
 ## Purpose
 Execute ONLY the current scenario's Playwright test spec file. Never run all tests.
 
-## References
-- `skills/_shared/path-resolution.md` — test spec paths and run commands
+## Paths
+Test command (always scoped to current scenario):
+- With folder: `npx playwright test tests/{type}/{folder}/{scenario}.spec.ts --project=chrome --reporter=list`
+- Without folder: `npx playwright test tests/{type}/{scenario}.spec.ts --project=chrome --reporter=list`
 
 ## Process
 

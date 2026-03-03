@@ -3,9 +3,13 @@
 ## Purpose
 Create test data JSON files — both shared reference data (reusable across scenarios) and scenario-specific data. Manage the separation between shared and scenario-specific values.
 
-## References
-- `skills/_shared/output-structure.md` — test-data directory structure
-- `skills/_shared/guardrails.md` — shared data protection rules
+## Paths
+- Shared data: `output/test-data/shared/{name}.json` (cross-scenario, team-owned)
+- Scenario data: `output/test-data/{type}/{scenario}.json` (scenario-specific)
+- Dataset files: `output/test-data/{dataset-name}.json` (DATASETS keyword)
+
+## Rules
+- **Shared Test Data Protection:** Files in `output/test-data/shared/` are cross-scenario reference data owned by the team. No skill may modify or delete them. The Generator may CREATE new shared data files if they don't already exist, but must NEVER overwrite existing ones.
 
 ## Process
 
@@ -93,4 +97,4 @@ import testData from '../../test-data/{dataset-name}.json';
 - [ ] Scenario JSON does not duplicate values from shared files
 - [ ] DATASETS produce JSON arrays with all rows from the markdown table
 - [ ] No hardcoded credentials in test data — use `process.env` references
-- [ ] File naming follows conventions from `output-structure.md`
+- [ ] File naming: kebab-case for data files (e.g., `users.json`, `saucedemo-cart-feature.json`)

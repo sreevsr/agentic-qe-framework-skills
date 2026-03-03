@@ -1,21 +1,22 @@
 # Skill: Apply Fix
 
 ## Purpose
-Apply a targeted fix for a diagnosed test failure. MUST read `fix-guardrails.md` before every modification.
+Apply a targeted fix for a diagnosed test failure. MUST check the pre-edit gate before every modification.
 
-## References
-- `skills/healer/fix-guardrails.md` — MANDATORY pre-edit gate
-- `skills/_shared/guardrails.md` — assertion and helper protection
+## Pre-Edit Gate (MANDATORY)
+
+Before editing ANY file, check its path against these rules IN ORDER:
+
+| # | File Pattern | Edit Allowed? | Alternative |
+|---|-------------|--------------|-------------|
+| 1 | `*.helpers.ts` | **NO** | `test.fixme('HELPER ISSUE: ...')` and document |
+| 2 | `test-data/shared/*` | **NO** | Create scenario override in `test-data/{type}/{scenario}.json` |
+| 3 | `output/core/*` | **NO** | Fix the calling file's import instead |
+| 4 | Assertion values (scenario-defined) | **NO** | `test.fixme('POTENTIAL BUG: ...')` |
+| 5 | Assertion values (auto-generated) | **YES** | Update placeholder |
+| 6 | Everything else | **YES** | Direct fix |
 
 ## Process
-
-### Pre-Check Gate (MANDATORY)
-
-Before editing ANY file, run the pre-edit gate from `fix-guardrails.md`:
-
-1. Check the filename against the block list
-2. If blocked → use `test.fixme()` and document
-3. If allowed → proceed with fix
 
 ### Fix by Category
 

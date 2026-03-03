@@ -3,9 +3,12 @@
 ## Purpose
 Create TypeScript Page Object classes for each page discovered in the analyst report. Every page object uses LocatorLoader — no raw selectors in code.
 
-## References
-- `skills/_shared/output-structure.md` — file naming conventions
-- `skills/_shared/guardrails.md` — helper file protection (do not create *.helpers.ts)
+## Paths
+- Output: `output/pages/{PageName}Page.ts` (PascalCase)
+- Helpers: `output/pages/{PageName}Page.helpers.ts` — team-owned, read-only. NEVER create or modify.
+
+## Rules
+- **Helper File Protection:** Files matching `output/pages/*.helpers.ts` are team-owned. The pipeline NEVER creates, modifies, or deletes them. Read helpers for discovery only.
 
 ## Input
 - Locator JSON files (from `generate-locators` skill)

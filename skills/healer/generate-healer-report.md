@@ -3,9 +3,6 @@
 ## Purpose
 Format the healing results into a structured markdown report and save it to disk.
 
-## References
-- `skills/_shared/path-resolution.md` — `HEALER_REPORT` path
-
 ## Output Path
 - With folder: `output/{folder}/healer-report-{scenario}.md`
 - Without folder: `output/healer-report-{scenario}.md`

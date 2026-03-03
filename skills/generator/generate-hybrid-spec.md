@@ -3,10 +3,17 @@
 ## Purpose
 Generate Playwright TypeScript test spec files for `type=hybrid` scenarios that interleave API calls and browser UI interactions in the same test. Uses both `{ page, request }` fixtures.
 
-## References
-- `skills/_shared/keyword-reference.md` — all keyword patterns
-- `skills/_shared/path-resolution.md` — `TEST_SPEC` path
-- `skills/_shared/guardrails.md` — helper file rules
+## Paths
+- Output (with folder): `output/tests/web/{folder}/{scenario}.spec.ts`
+- Output (without folder): `output/tests/web/{scenario}.spec.ts`
+(Hybrid specs go in `tests/web/` because they include UI interactions.)
+
+## Rules
+- **Helper File Protection:** If a page has a `*.helpers.ts` file, import the helpers class aliased to the base name. NEVER create or modify helper files.
+- **Assertion Protection:** VERIFY steps produce `expect()` assertions matching the scenario's explicit expected values. Never weaken or remove them.
+
+## Keyword Patterns
+Apply keyword patterns from `skills/_shared/keyword-reference.md` (loaded separately by the orchestrator before this skill runs).
 
 ## Input
 - Analyst report — step results for UI steps

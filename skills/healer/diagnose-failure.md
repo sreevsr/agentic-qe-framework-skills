@@ -3,8 +3,10 @@
 ## Purpose
 Classify each test failure into one of 7 diagnostic categories (A-G) to determine the correct fix strategy.
 
-## References
-- `skills/_shared/guardrails.md` — assertion protection and bug flagging rules
+## Rules
+- **Assertion Protection:** The Healer fixes TEST CODE (how we test). It must NEVER alter EXPECTED BEHAVIOR (what we test).
+- Before changing any expected value, read the SOURCE SCENARIO first. If the scenario explicitly defines the value, flag as POTENTIAL BUG — do NOT update.
+- **API Behavior Escape Hatch:** Only if the scenario declares `## API Behavior: mock` may the Healer adapt for non-persistence. Without this header, all guardrails apply with ZERO exceptions.
 
 ## Diagnostic Categories
 
@@ -60,7 +62,7 @@ Classify each test failure into one of 7 diagnostic categories (A-G) to determin
 | 400 | Request body matches expected schema |
 | 5xx | Server issue — document, don't fix |
 
-**CRUD chain persistence guardrail (from guardrails.md):**
+**CRUD chain persistence guardrail:**
 - POST returns 2xx but subsequent GET returns 404 → **POTENTIAL APPLICATION BUG**
 - PUT/PATCH returns 2xx but GET shows old values → **POTENTIAL APPLICATION BUG**
 - DELETE returns 2xx but GET still returns resource → **POTENTIAL APPLICATION BUG**

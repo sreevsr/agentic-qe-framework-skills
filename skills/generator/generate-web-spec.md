@@ -3,10 +3,18 @@
 ## Purpose
 Generate Playwright TypeScript test spec files for `type=web` scenarios. Produces one `.spec.ts` file per scenario with Page Object imports, assertions, and all keyword implementations.
 
-## References
-- `skills/_shared/keyword-reference.md` — all keyword code patterns
-- `skills/_shared/path-resolution.md` — `TEST_SPEC` path
-- `skills/_shared/guardrails.md` — helper file rules
+## Paths
+- Output (with folder): `output/tests/web/{folder}/{scenario}.spec.ts`
+- Output (without folder): `output/tests/web/{scenario}.spec.ts`
+- Test data (scenario): `output/test-data/{type}/{scenario}.json`
+- Test data (shared): `output/test-data/shared/{name}.json`
+
+## Rules
+- **Helper File Protection:** If a page has a `*.helpers.ts` file, import the helpers class aliased to the base name. NEVER create or modify helper files.
+- **Assertion Protection:** VERIFY steps produce `expect()` assertions that match the scenario's explicit expected values. Never weaken or remove them.
+
+## Keyword Patterns
+Apply keyword patterns from `skills/_shared/keyword-reference.md` (loaded separately by the orchestrator before this skill runs).
 
 ## Input
 - Analyst report — step results, page map, captured values

@@ -3,8 +3,16 @@
 ## Purpose
 Produce the final `pipeline-summary-{scenario}.md` at the end of the pipeline. Summarizes all stage results, files generated, test execution details, quality metrics, healer activity, and overall verdict. This is the last file written in every pipeline run.
 
-## References
-- `skills/_shared/path-resolution.md` — `PIPELINE_SUMMARY` path
+## Paths
+- Without folder: `output/pipeline-summary-{scenario}.md`
+- With folder: `output/{folder}/pipeline-summary-{scenario}.md`
+
+## Input
+- Analyst report: `output/analyst-report-{scenario}.md` (or `output/{folder}/...`)
+- Generator report: `output/generator-report-{scenario}.md` (or `output/{folder}/...`)
+- Healer report: `output/healer-report-{scenario}.md` (or `output/{folder}/...`)
+- Reviewer scorecard: `output/review-scorecard-{scenario}.md` (or `output/{folder}/...`)
+- Healer-review report (if Stage 5 ran): `output/healer-review-fixes-report-{scenario}.md`
 
 ## Output Path
 - With folder: `output/{folder}/pipeline-summary-{scenario}.md`

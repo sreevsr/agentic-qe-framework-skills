@@ -6,8 +6,17 @@ Audit Playwright configuration for correctness and best practices. Weight: **Med
 ## Scope
 All scenario types.
 
-## References
-- `skills/_shared/reporting.md` — expected reporter configuration
+## Expected Reporter Configuration
+
+The generated `playwright.config.ts` must include these reporters:
+
+```typescript
+reporter: [
+  ['list'],                                                    // Console output
+  ['html', { outputFolder: 'playwright-report', open: 'never' }], // Visual report
+  ['json', { outputFile: 'test-results/results.json' }],      // CI/CD consumption
+],
+```
 
 ## Checklist
 

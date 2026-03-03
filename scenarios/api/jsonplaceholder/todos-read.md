@@ -1,7 +1,6 @@
-# Feature: Todos Read Operations
+# Feature: Todos Read
 
 ## API Base URL: https://jsonplaceholder.typicode.com
-## API Behavior: mock
 
 ---
 
@@ -11,32 +10,25 @@
 1. API GET: /todos
 2. VERIFY: Response status is 200
 3. VERIFY: Response is an array
-4. CAPTURE: Response array length as {{totalTodos}}
-5. VERIFY: {{totalTodos}} is greater than 0
-6. VERIFY: Response[0] has fields: userId, id, title, completed
+4. VERIFY: Response array length is 200
+5. VERIFY: Each item has fields: userId, id, title, completed
+6. CAPTURE: Response array length as {{totalTodos}}
 7. REPORT: Print "Found {{totalTodos}} todos"
 
 ---
 
-### Scenario: GET /todos/{id} — Retrieve Specific Todo
+### Scenario: GET /todos/{id} — Retrieve Single Todo
 **Tags:** api, todos, smoke, P0
 
 1. API GET: /todos/1
 2. VERIFY: Response status is 200
 3. VERIFY: Response $.id equals 1
-4. VERIFY: Response has fields: userId, id, title, completed
-5. CAPTURE: Response $.title as {{todoTitle}}
-6. CAPTURE: Response $.completed as {{isCompleted}}
-7. REPORT: Print "Todo: {{todoTitle}} (Completed: {{isCompleted}})"
-
----
-
-### Scenario: GET /todos/{id} — Non-Existent Todo (Negative)
-**Tags:** api, todos, regression, P1
-
-1. API GET: /todos/999999
-2. VERIFY: Response status is 404
-3. REPORT: Print "Non-existent todo returned 404 as expected"
+4. VERIFY: Response $.userId is an integer
+5. VERIFY: Response $.title is a string
+6. VERIFY: Response $.completed is a boolean
+7. CAPTURE: Response $.title as {{todoTitle}}
+8. CAPTURE: Response $.completed as {{todoStatus}}
+9. REPORT: Print "Todo 1: title={{todoTitle}}, completed={{todoStatus}}"
 
 ---
 
@@ -46,11 +38,10 @@
 1. API GET: /todos?userId=1
 2. VERIFY: Response status is 200
 3. VERIFY: Response is an array
-4. CAPTURE: Response array length as {{userTodos}}
-5. VERIFY: {{userTodos}} is greater than 0
-6. VERIFY: Response[0].userId equals 1
-7. VERIFY: Response[0] has fields: id, title, completed
-8. REPORT: Print "User 1 has {{userTodos}} todos"
+4. VERIFY: Response array length is 20
+5. VERIFY: Every item $.userId equals 1
+6. CAPTURE: Response array length as {{userTodoCount}}
+7. REPORT: Print "User 1 has {{userTodoCount}} todos"
 
 ---
 
@@ -60,10 +51,9 @@
 1. API GET: /todos?completed=true
 2. VERIFY: Response status is 200
 3. VERIFY: Response is an array
-4. CAPTURE: Response array length as {{completedTodos}}
-5. VERIFY: {{completedTodos}} is greater than 0
-6. VERIFY: Response[0].completed equals true
-7. REPORT: Print "Found {{completedTodos}} completed todos"
+4. VERIFY: Every item $.completed equals true
+5. CAPTURE: Response array length as {{completedCount}}
+6. REPORT: Print "Found {{completedCount}} completed todos"
 
 ---
 
@@ -73,10 +63,22 @@
 1. API GET: /todos?completed=false
 2. VERIFY: Response status is 200
 3. VERIFY: Response is an array
-4. CAPTURE: Response array length as {{incompleteTodos}}
-5. VERIFY: {{incompleteTodos}} is greater than 0
-6. VERIFY: Response[0].completed equals false
-7. REPORT: Print "Found {{incompleteTodos}} incomplete todos"
+4. VERIFY: Every item $.completed equals false
+5. CAPTURE: Response array length as {{incompleteCount}}
+6. REPORT: Print "Found {{incompleteCount}} incomplete todos"
+
+---
+
+### Scenario: GET /todos — Count Completed vs Incomplete
+**Tags:** api, todos, regression, P1
+
+1. API GET: /todos
+2. VERIFY: Response status is 200
+3. CAPTURE: Count of items where $.completed equals true as {{completedCount}}
+4. CAPTURE: Count of items where $.completed equals false as {{incompleteCount}}
+5. CALCULATE: {{completedCount}} + {{incompleteCount}} as {{totalCount}}
+6. VERIFY: {{totalCount}} equals 200
+7. REPORT: Print "Completed={{completedCount}}, Incomplete={{incompleteCount}}, Total={{totalCount}}"
 
 ---
 
@@ -86,29 +88,10 @@
 1. API GET: /todos?userId=1&completed=true
 2. VERIFY: Response status is 200
 3. VERIFY: Response is an array
-4. CAPTURE: Response array length as {{userCompletedTodos}}
-5. VERIFY: Response[0].userId equals 1
-6. VERIFY: Response[0].completed equals true
-7. REPORT: Print "User 1 has {{userCompletedTodos}} completed todos"
-
----
-
-### Scenario: GET /todos — Count Completed vs Incomplete
-**Tags:** api, todos, regression, P2
-
-1. API GET: /todos?userId=1
-2. VERIFY: Response status is 200
-3. VERIFY: Response is an array
-4. CAPTURE: Response array length as {{totalUserTodos}}
-5. API GET: /todos?userId=1&completed=true
-6. VERIFY: Response status is 200
-7. CAPTURE: Response array length as {{completed}}
-8. API GET: /todos?userId=1&completed=false
-9. VERIFY: Response status is 200
-10. CAPTURE: Response array length as {{incomplete}}
-11. CALCULATE: {{completed}} + {{incomplete}} as {{sum}}
-12. VERIFY: {{sum}} equals {{totalUserTodos}}
-13. REPORT: Print "User 1 todos: {{completed}} completed + {{incomplete}} incomplete = {{sum}} total"
+4. VERIFY: Every item $.userId equals 1
+5. VERIFY: Every item $.completed equals true
+6. CAPTURE: Response array length as {{filteredCount}}
+7. REPORT: Print "User 1 has {{filteredCount}} completed todos"
 
 ---
 
@@ -117,13 +100,29 @@
 
 1. API GET: /todos/1
 2. VERIFY: Response status is 200
-3. CAPTURE: Response $.userId as {{userId}}
-4. CAPTURE: Response $.id as {{todoId}}
-5. CAPTURE: Response $.title as {{title}}
-6. CAPTURE: Response $.completed as {{completed}}
-7. VERIFY: {{userId}} is greater than 0
-8. VERIFY: {{todoId}} is greater than 0
-9. VERIFY: {{title}} is not empty
-10. VERIFY: {{completed}} is boolean
-11. REPORT: Print "Todo validation passed"
-12. REPORT: Print "Todo {{todoId}}: '{{title}}' (User: {{userId}})"
+3. VERIFY: Response $.userId is an integer
+4. VERIFY: Response $.id is an integer
+5. VERIFY: Response $.title is a string
+6. VERIFY: Response $.completed is a boolean
+7. VERIFY: Response $.completed equals false
+8. REPORT: Print "Todo 1 structure validated"
+
+---
+
+### Scenario: GET /todos/{id} — Non-Existent Todo (404)
+**Tags:** api, todos, regression, P2
+
+1. API GET: /todos/99999
+2. VERIFY: Response status is 404
+3. REPORT: Print "Correctly received 404 for non-existent todo"
+
+---
+
+### Scenario: GET /todos?userId=99999 — Non-Existent User Filter
+**Tags:** api, todos, regression, P2
+
+1. API GET: /todos?userId=99999
+2. VERIFY: Response status is 200
+3. VERIFY: Response is an array
+4. VERIFY: Response array length is 0
+5. REPORT: Print "Non-existent user returns empty todos array"

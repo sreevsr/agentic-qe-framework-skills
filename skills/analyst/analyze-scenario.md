@@ -6,9 +6,10 @@ Execute a test scenario step-by-step using Playwright MCP browser tools, discove
 ## Tools Required
 Playwright MCP server (browser automation): navigate, click, fill, snapshot, screenshot.
 
-## References
-- `skills/_shared/keyword-reference.md` — how to handle each keyword during execution
-- `skills/_shared/path-resolution.md` — report output path
+## Paths
+- Report output (no folder): `output/analyst-report-{scenario}.md`
+- Report output (with folder): `output/{folder}/analyst-report-{scenario}.md`
+- Scenario source: `scenarios/web/{scenario}.md` or `scenarios/web/{folder}/{scenario}.md`
 
 ## Input
 - Scenario `.md` file from `scenarios/web/` (or `scenarios/web/{folder}/`)

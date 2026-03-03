@@ -3,9 +3,9 @@
 ## Purpose
 Create JSON locator files for each page discovered in the analyst report. Every interactive element gets a primary selector and at least 2 fallbacks.
 
-## References
-- `skills/_shared/output-structure.md` — file naming conventions
-- `skills/_shared/path-resolution.md` — `LOCATORS` path
+## Paths
+- Output: `output/locators/{page-name}.locators.json`
+- Naming: lowercase kebab-case matching the page name (e.g., `cart-page.locators.json`)
 
 ## Input
 - Analyst report (`analyst-report-{scenario}.md`) — page map with discovered elements

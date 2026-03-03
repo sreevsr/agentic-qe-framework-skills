@@ -3,9 +3,17 @@
 ## Purpose
 Generate Playwright TypeScript test spec files for `type=api` scenarios. Uses Playwright's built-in `request` fixture (not axios/fetch).
 
-## References
-- `skills/_shared/keyword-reference.md` — API step patterns
-- `skills/_shared/path-resolution.md` — `TEST_SPEC` path for API
+## Paths
+- Output (with folder): `output/tests/api/{folder}/{scenario}.spec.ts`
+- Output (without folder): `output/tests/api/{scenario}.spec.ts`
+- Scenario source (with folder): `scenarios/api/{folder}/{scenario}.md`
+- Scenario source (without folder): `scenarios/api/{scenario}.md`
+
+## Rules
+- **Assertion Protection:** VERIFY steps produce `expect()` assertions matching the scenario's explicit expected values. Never weaken or remove them.
+
+## Keyword Patterns
+Apply keyword patterns from `skills/_shared/keyword-reference.md` (loaded separately by the orchestrator before this skill runs).
 
 ## Input
 - Scenario `.md` file (API scenarios skip the Analyst stage — read scenario directly)

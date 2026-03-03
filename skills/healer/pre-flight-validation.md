@@ -3,6 +3,16 @@
 ## Purpose
 Validate the generated code before the first test run. Catch and fix type errors, missing imports, and configuration issues before they cause test failures.
 
+## Paths
+- Scenario source (web, with folder): `scenarios/web/{folder}/{scenario}.md`
+- Scenario source (web, without folder): `scenarios/web/{scenario}.md`
+- Scenario source (api, with folder): `scenarios/api/{folder}/{scenario}.md`
+- Scenario source (api, without folder): `scenarios/api/{scenario}.md`
+- Test spec (web, with folder): `output/tests/web/{folder}/{scenario}.spec.ts`
+- Test spec (web, without folder): `output/tests/web/{scenario}.spec.ts`
+- Test spec (api, with folder): `output/tests/api/{folder}/{scenario}.spec.ts`
+- Test spec (api, without folder): `output/tests/api/{scenario}.spec.ts`
+
 ## Process
 
 ### Step 1: TypeScript Type Check

@@ -3,15 +3,21 @@
 ## Purpose
 Entry point for Stage 3 (Healer). Orchestrates the full cycle: pre-flight validation → run tests → diagnose failures → apply fixes → re-run. Maximum 3 fix-and-rerun cycles.
 
-## References
-- `skills/_shared/path-resolution.md` — test spec and report paths
-- `skills/_shared/guardrails.md` — what the Healer can and cannot fix
+## Paths
+Test command (always run ONLY the current scenario's spec file):
+- With folder: `npx playwright test tests/{type}/{folder}/{scenario}.spec.ts --project=chrome --reporter=list`
+- Without folder: `npx playwright test tests/{type}/{scenario}.spec.ts --project=chrome --reporter=list`
+Never run `npx playwright test` without a file path.
+
+Healer report:
+- With folder: `output/{folder}/healer-report-{scenario}.md`
+- Without folder: `output/healer-report-{scenario}.md`
 
 ## Sub-Skills Invoked
 1. `skills/healer/pre-flight-validation.md`
 2. `skills/healer/run-tests.md`
 3. `skills/healer/diagnose-failure.md`
-4. `skills/healer/apply-fix.md` (which reads `fix-guardrails.md` before each fix)
+4. `skills/healer/apply-fix.md` (pre-edit gate inlined — no external file needed)
 5. `skills/healer/generate-healer-report.md`
 
 ## Process
@@ -74,4 +80,4 @@ Track across cycles:
 - Run ONLY the current scenario's spec file — never run all tests
 - Never add `waitForTimeout()` to fix timing issues
 - Never skip or delete failing tests — fix them or flag with `test.fixme()`
-- Read `fix-guardrails.md` before EVERY fix application
+- Before EVERY fix, check the pre-edit gate (inlined in `apply-fix` skill)

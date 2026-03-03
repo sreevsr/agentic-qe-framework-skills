@@ -3,9 +3,13 @@
 ## Purpose
 Produce `generator-report-{scenario}.md` at the end of the Generator stage. Documents every file created, every scenario step mapped, keyword implementations, helper integration, and quality checks. This report is consumed by the Healer (known issues, potential fixes) and Reviewer (traceability audit).
 
-## References
-- `skills/_shared/path-resolution.md` — report output path
-- `skills/_shared/output-structure.md` — expected file tree
+## Paths
+- Without folder: `output/generator-report-{scenario}.md`
+- With folder: `output/{folder}/generator-report-{scenario}.md`
+
+## Rules
+- The report MUST list every file created — use the directory tree from `setup-framework` skill as baseline.
+- File naming follows kebab-case conventions (e.g., `cart-page.locators.json`, `saucedemo-cart-feature.spec.ts`).
 
 ## Output Path
 - Without folder: `output/generator-report-{scenario}.md`

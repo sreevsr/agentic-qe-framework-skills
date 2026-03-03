@@ -3,8 +3,14 @@
 ## Purpose
 After all review fixes are applied, validate that the code compiles and tests still pass. Generate the healer-review report.
 
-## References
-- `skills/_shared/path-resolution.md` — `HEALER_REVIEW_REPORT` path
+## Paths
+Report output:
+- With folder: `output/{folder}/healer-review-fixes-report-{scenario}.md`
+- Without folder: `output/healer-review-fixes-report-{scenario}.md`
+
+Test command:
+- With folder: `npx playwright test tests/{type}/{folder}/{scenario}.spec.ts --project=chrome --reporter=list`
+- Without folder: `npx playwright test tests/{type}/{scenario}.spec.ts --project=chrome --reporter=list`
 
 ## Process
 

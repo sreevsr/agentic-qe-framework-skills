@@ -3,6 +3,15 @@
 ## Purpose
 Replace all `waitForTimeout` and artificial delays with proper Playwright waits.
 
+## Pre-Edit Gate
+Before editing ANY file, check its path:
+| File Pattern | Edit Allowed? | Alternative |
+|-------------|--------------|-------------|
+| `*.helpers.ts` | **NO** | Document in report but do NOT fix |
+| `test-data/shared/*` | **NO** | Create scenario override instead |
+| `output/core/*` | **NO** | Document for team review |
+| Everything else | **YES** | Proceed with fix |
+
 ## Fixes
 
 ### Remove waitForTimeout

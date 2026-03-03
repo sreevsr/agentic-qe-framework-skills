@@ -3,12 +3,14 @@
 ## Purpose
 Fix raw selectors found by the Reviewer. Migrate hardcoded selectors into locator JSON files and update page objects to use LocatorLoader.
 
-## References
-- `skills/_shared/guardrails.md` — helper file protection (do NOT fix helpers)
-- `skills/healer/fix-guardrails.md` — pre-edit gate
-
-## Pre-Check
-Before editing ANY file, run the pre-edit gate. If the raw selector is in a `*.helpers.ts` file, **STOP** — document it but do NOT fix it.
+## Pre-Edit Gate
+Before editing ANY file, check its path:
+| File Pattern | Edit Allowed? | Alternative |
+|-------------|--------------|-------------|
+| `*.helpers.ts` | **NO** | Document in report but do NOT fix |
+| `test-data/shared/*` | **NO** | Create scenario override instead |
+| `output/core/*` | **NO** | Document for team review |
+| Everything else | **YES** | Proceed with fix |
 
 ## Three-Step Migration Pattern
 

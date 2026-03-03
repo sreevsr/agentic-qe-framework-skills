@@ -3,10 +3,13 @@
 ## Purpose
 Copy core framework files from `templates/` into `output/` and set up project configuration. This runs first in the Generator stage to establish the project scaffold.
 
-## References
-- `skills/_shared/output-structure.md` — directory tree contract
-- `skills/_shared/path-resolution.md` — file paths
-- `skills/_shared/reporting.md` — reporter configuration
+## Paths
+- Config files: `output/playwright.config.ts`, `output/package.json`, `output/tsconfig.json`, `output/.env.example`
+- Core files: `output/core/locator-loader.ts`, `output/core/base-page.ts`, `output/core/shared-state.ts`, `output/core/test-data-loader.ts`
+- Source templates: `templates/core/`, `templates/config/`
+
+## Directory Tree
+All scenarios share a single `output/` project. Do NOT create a separate folder per scenario.
 
 ## Process
 
