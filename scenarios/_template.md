@@ -1,70 +1,41 @@
-# Scenario: [Clear Business Flow Name]
+# Scenario Templates — Type Routing Guide
 
-## Module: [auth | inventory | cart | checkout | orders | admin | api]
-## Priority: [P0-Critical | P1-High | P2-Medium | P3-Low]
-## Type: [UI (default) | API]
-## Depends On: [None | scenario-name (needs: value-name)]
-## Produces: [None | value-name]
+This framework supports three scenario types. Use the correct template for your type.
 
-## Application
-- **URL:** [https://your-app-url.com or {{ENV.APP_BASE_URL}}]
-- **Credentials:** username: {{ENV.TEST_USERNAME}} / password: {{ENV.TEST_PASSWORD}}
+## Types
 
-## For API scenarios only:
-## API Base URL: {{ENV.API_BASE_URL}}
-## Auth: Bearer {{ENV.API_TOKEN}}
+| Type | Template | Pipeline | Fixtures | When to Use |
+|------|----------|----------|----------|-------------|
+| `web` | [scenarios/web/_template.md](web/_template.md) | Analyst → Generator → Healer → Reviewer | `{ page }` | Browser-only UI tests |
+| `api` | [scenarios/api/_template.md](api/_template.md) | Generator → Healer → Reviewer | `{ request }` | REST API tests (no browser) |
+| `hybrid` | Use the web template with API steps mixed in | Analyst → Generator → Healer → Reviewer | `{ page, request }` | Tests that combine UI actions and API calls |
 
-## Pre-conditions
-- [Any setup needed]
-- [If depends on another scenario]: Read {{valueName}} from test-data/shared-state.json
+## Invocation
 
-## Common Setup (for multi-scenario files only)
-1. [Steps that run before each scenario]
+```
+scenario={name} type={web|api|hybrid} [folder={subfolder}]
+```
 
----
+## Placement
 
-## Steps
+- Web scenarios → `scenarios/web/` or `scenarios/web/{folder}/`
+- API scenarios → `scenarios/api/` or `scenarios/api/{folder}/`
+- Hybrid scenarios → `scenarios/web/` or `scenarios/web/{folder}/` (they include browser interaction)
 
-### Available Keywords:
-- **Plain step:** Normal action (click, fill, navigate)
-- **VERIFY:** Assertion checkpoint — `VERIFY: Cart badge shows "2"`
-- **CAPTURE:** Read value from UI/API — `CAPTURE: Read subtotal as {{subtotal}}`
-- **CALCULATE:** Math on captured values — `CALCULATE: {{total}} = {{sub}} + {{tax}}`
-- **SCREENSHOT:** Take visual evidence — `SCREENSHOT: checkout-overview`
-- **REPORT:** Include in test output — `REPORT: Print {{orderNumber}}`
-- **SAVE:** Persist for other scenarios — `SAVE: Write {{id}} to shared-state.json as "key"`
-- **SHARED_DATA:** Load shared reference data — `SHARED_DATA: users, products`
-- **API GET/POST/PUT/PATCH/DELETE:** API call — `API POST: /users with body {...}`
+## Keyword Quick Reference
 
-### Steps:
-1. Navigate to [URL]
-2. [Action]
-3. VERIFY: [Expected condition]
-4. CAPTURE: Read [element] and store as {{variableName}}
-5. CALCULATE: {{result}} = {{value1}} + {{value2}}
-6. SCREENSHOT: [descriptive-filename]
-7. REPORT: Print {{variableName}}
-8. SAVE: Write {{variableName}} to test-data/shared-state.json as "keyName"
+All types share the same keyword system. See the type-specific templates for full details.
 
-**Tags:** [smoke, regression, P0, P1, module-name]
-
-## Expected Results
-- [What should be true at the end]
-
-## SHARED_DATA (optional — reuse cross-scenario reference data)
-SHARED_DATA: users, products
-
-## Test Data
-| Field | Value |
-|-------|-------|
-| [field] | [value or {{ENV.VAR}}] |
-
-## DATASETS (optional — for data-driven testing)
-| field1 | field2 | expectedResult |
-|--------|--------|----------------|
-| value1 | value2 | expected1      |
-| value3 | value4 | expected2      |
-
-## Notes for Analyst Agent
-- [Popups, iframes, slow pages, dynamic elements]
-- [For API: skip Analyst, go directly to Generator]
+| Keyword | Purpose | Web | API | Hybrid |
+|---------|---------|-----|-----|--------|
+| Plain step | Action (click, fill, navigate) | Yes | — | Yes |
+| `VERIFY:` | Assertion checkpoint | Yes | Yes | Yes |
+| `CAPTURE:` | Store a runtime value | Yes | Yes | Yes |
+| `CALCULATE:` | Math on captured values | Yes | Yes | Yes |
+| `SCREENSHOT:` | Visual evidence | Yes | — | Yes |
+| `REPORT:` | Print to test output | Yes | Yes | Yes |
+| `SAVE:` | Persist to shared-state.json | Yes | Yes | Yes |
+| `SHARED_DATA:` | Load shared reference data | Yes | Yes | Yes |
+| `USE_HELPER:` | Call team helper method | Yes | — | Yes |
+| `API GET/POST/PUT/PATCH/DELETE:` | REST API call | — | Yes | Yes |
+| `DATASETS` | Data-driven test rows | Yes | Yes | Yes |

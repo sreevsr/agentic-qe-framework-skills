@@ -1,7 +1,17 @@
 # Feature: [Feature Name]
 
+## Type: web
+## Module: [auth | inventory | cart | checkout | orders | admin]
+## Priority: [P0-Critical | P1-High | P2-Medium | P3-Low]
+## Depends On: [None | scenario-name (needs: value-name)]
+## Produces: [None | value-name]
+
 ## SHARED_DATA: [users, products]
-## API Behavior: [live|mock]
+
+## Application
+- **URL:** [https://your-app-url.com or {{ENV.BASE_URL}}]
+- **Credentials:** username: {{ENV.TEST_USERNAME}} / password: {{ENV.TEST_PASSWORD}}
+
 **Tags:** [smoke, regression, P0]
 
 ## Common Setup
@@ -31,14 +41,24 @@
 1. [Steps for second scenario]
 2. VERIFY: [condition]
 
-## DATASETS
+## Pre-conditions
+- [Any setup needed before the first scenario runs]
+- [If depends on another scenario]: Read {{valueName}} from test-data/shared-state.json
+
+## DATASETS (optional — for data-driven testing)
 | field1 | field2 | expectedResult |
 |--------|--------|----------------|
 | value1 | value2 | expected1      |
 | value3 | value4 | expected2      |
 
+## Expected Results
+- [What should be true at the end]
+
+## Notes for Analyst Agent
+- [Popups, iframes, slow pages, dynamic elements]
+
 <!--
-KEYWORD REFERENCE:
+KEYWORD REFERENCE (web):
   VERIFY          — Assert a condition inline (becomes expect() assertion)
   CAPTURE         — Store a runtime value (becomes variable assignment)
   CALCULATE       — Math on captured values (becomes inline calculation)
@@ -48,15 +68,14 @@ KEYWORD REFERENCE:
   USE_HELPER      — Call team helper method (requires *.helpers.ts file)
   SHARED_DATA     — Load shared reference data (users, products, customers)
   DATASETS        — Data-driven test rows (becomes for...of loop)
-  API GET/POST/PUT/DELETE — REST API call (uses Playwright request fixture)
   Tags            — CI/CD filtering labels (becomes { tag: ['@tagName'] })
   {{ENV.VAR}}     — Environment variable (becomes process.env.VAR)
-  API Behavior    — mock (non-persistent) or live (default, guardrails enforced)
   ---             — Separator between scenarios in multi-scenario file
   Common Setup    — Steps shared by all scenarios (becomes test.beforeEach())
 
-TYPE OPTIONS:
-  type=web     — Browser UI tests (uses { page } fixture)
-  type=api     — API-only tests (uses { request } fixture)
-  type=hybrid  — Interleaved API + UI tests (uses { page, request } fixtures)
+HYBRID SCENARIOS (type=hybrid):
+  If your test mixes UI actions with API calls, invoke with type=hybrid instead of type=web.
+  This adds the { request } fixture alongside { page }.
+  You can then use API keywords (API GET/POST/PUT/PATCH/DELETE) inline with UI steps.
+  Example: call an API to seed data, then verify the result in the browser.
 -->
