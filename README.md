@@ -9,8 +9,8 @@ Write a test scenario in a simple `.md` file describing what to test. Claude Cod
 | Stage | Role | Skills | Output |
 |-------|------|--------|--------|
 | **Analyst** | Opens browser, discovers elements, validates scenario steps | `skills/analyst/` (1 skill) | `analyst-report-{scenario}.md` |
-| **Generator** | Produces Playwright TypeScript framework with Page Objects, locators, and spec files | `skills/generator/` (8 skills) | Complete test framework in `output/` |
-| **Healer** | Runs tests, diagnoses failures across 7 categories, fixes code, re-runs (max 5 cycles) | `skills/healer/` (7 skills) | Passing tests + `healer-report-{scenario}.md` |
+| **Generator** | Produces Playwright TypeScript framework with Page Objects, locators, and spec files | `skills/generator/` (10 skills) | Complete test framework in `output/` |
+| **Healer** | Runs tests, diagnoses failures across 7 categories, fixes code, re-runs (max 3 cycles) | `skills/healer/` (6 skills) | Passing tests + `healer-report-{scenario}.md` |
 | **Reviewer** | Audits code quality across 8 dimensions, scores 1-5 per dimension, issues verdict | `skills/reviewer/` (9 skills) | `review-scorecard-{scenario}.md` |
 | **Healer-Review** | Fixes code quality issues from Reviewer, validates tests still pass | `skills/healer-review/` (9 skills) | `healer-review-fixes-report-{scenario}.md` |
 | **API Analyst** | Reads Swagger/OpenAPI specs, generates scenario `.md` files | `skills/api-analyst/` (1 skill) | Scenario `.md` files |
@@ -47,7 +47,7 @@ Scout is NOT invoked by the pipeline. See `skills/scout/run-scout.md` for the fu
 
 ## Why Skills Architecture?
 
-This framework uses **42 focused skill files** instead of 5 monolithic agent instructions. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full rationale.
+This framework uses **44 focused skill files** instead of 5 monolithic agent instructions. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full rationale.
 
 | Benefit | How |
 |---------|-----|
@@ -93,15 +93,19 @@ agentic-qe-framework-skills-v5/
 ├── CLAUDE.md                        ← Pipeline orchestrator (always loaded by Claude Code)
 ├── ARCHITECTURE.md                  ← Architecture decisions and rationale
 ├── ENTERPRISE-SCALING-GUIDE.md      ← Multi-team scaling and CI/CD patterns
-├── skills/                          ← 41 composable skill files
-│   ├── _shared/                     ← Cross-cutting rules (5 files)
-│   │   ├── guardrails.md            # Helper/shared-data/assertion protection
-│   │   ├── path-resolution.md       # Canonical file paths
-│   │   ├── keyword-reference.md     # Keyword → TypeScript code patterns
-│   │   ├── output-structure.md      # Directory tree contract
-│   │   └── reporting.md             # Reporter configuration (Allure, ReportPortal)
+├── skills/                          ← 44 composable skill files
+│   ├── _shared/                     ← Shared runtime file (1 file, loaded only during spec generation)
+│   │   └── keyword-reference.md     # Keyword → TypeScript code patterns
+│   ├── _reference/                  ← Archived human reference docs (NOT loaded by LLM)
+│   │   ├── guardrails.md            # Canonical source: helper/shared-data/assertion protection
+│   │   ├── path-resolution.md       # Canonical source: file paths
+│   │   ├── output-structure.md      # Canonical source: directory tree contract
+│   │   ├── reporting.md             # Canonical source: reporter configuration
+│   │   ├── fix-guardrails.md        # Canonical source: pre-edit gate rules
+│   │   ├── post-stage-checklist.md  # Canonical source: stage verification checks
+│   │   └── README.md                # Explains the tiered architecture
 │   ├── analyst/                     ← Browser scenario execution (1 file)
-│   ├── generator/                   ← Code generation (8 files)
+│   ├── generator/                   ← Code generation (10 files)
 │   │   ├── setup-framework.md       # Core files and config setup
 │   │   ├── generate-locators.md     # JSON locator files
 │   │   ├── generate-pages.md        # Page Object classes
@@ -109,14 +113,15 @@ agentic-qe-framework-skills-v5/
 │   │   ├── generate-web-spec.md     # Web test specs (type=web)
 │   │   ├── generate-api-spec.md     # API test specs (type=api)
 │   │   ├── generate-hybrid-spec.md  # Hybrid test specs (type=hybrid)
-│   │   └── setup-test-data.md       # Test data management
-│   ├── healer/                      ← Test healing (7 files)
+│   │   ├── setup-test-data.md       # Test data management
+│   │   ├── generate-report.md       # Generator stage report
+│   │   └── generate-pipeline-summary.md  # Final pipeline summary
+│   ├── healer/                      ← Test healing (6 files)
 │   │   ├── heal-loop.md             # Orchestrates full healing cycle
 │   │   ├── pre-flight-validation.md # TypeScript checks before first run
 │   │   ├── run-tests.md             # Execute specific spec file
 │   │   ├── diagnose-failure.md      # Classify failures (Categories A-G)
-│   │   ├── apply-fix.md             # Apply targeted fix
-│   │   ├── fix-guardrails.md        # BLOCK/ALLOW gate before every edit
+│   │   ├── apply-fix.md             # Apply targeted fix (with inlined pre-edit gate)
 │   │   └── generate-healer-report.md
 │   ├── reviewer/                    ← Quality audit (9 files)
 │   │   ├── review-locator-quality.md    # Dimension 1
@@ -219,7 +224,7 @@ Default: Playwright HTML + JSON + list. Extensible to:
 - **ReportPortal** — `npm install -D @reportportal/agent-js-playwright` + env vars
 - **Custom dashboards** — consume `test-results/results.json`
 
-No generated test code changes needed. See `skills/_shared/reporting.md`.
+No generated test code changes needed. See `skills/_reference/reporting.md` for configuration details.
 
 ## MCP Extensibility
 

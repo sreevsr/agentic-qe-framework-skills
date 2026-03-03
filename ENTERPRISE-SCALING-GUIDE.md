@@ -30,8 +30,9 @@ The reusable engine containing agents, templates, core utilities, and prompt fil
 agentic-qe-framework-skills-v5/      ← Template repo
 ├── CLAUDE.md                         ← Pipeline orchestrator (always loaded)
 ├── ARCHITECTURE.md                   ← Architecture decisions and rationale
-├── skills/                           ← Composable skill files (42 files)
-│   ├── _shared/                      # Cross-cutting rules (guardrails, paths, keywords)
+├── skills/                           ← Composable skill files (44 files)
+│   ├── _shared/                      # Shared runtime: keyword-reference.md only
+│   ├── _reference/                   # Archived human reference docs (NOT loaded by LLM)
 │   ├── analyst/                      # Browser-based scenario execution
 │   ├── generator/                    # Code generation (8 skills)
 │   ├── healer/                       # Test healing (7 skills)
@@ -416,8 +417,8 @@ Helpers can **read** shared data freely. Helpers must **never write** to `test-d
 
 | Stage | Rule |
 |---|---|
-| **Generator** | NEVER create, modify, or delete `*.helpers.ts` files. Read them for discovery only. See `skills/_shared/guardrails.md`. |
-| **Healer** | NEVER modify `*.helpers.ts` files. If a helper causes a failure, mark with `test.fixme('HELPER ISSUE: ...')` and document in the healer report. See `skills/healer/fix-guardrails.md`. |
+| **Generator** | NEVER create, modify, or delete `*.helpers.ts` files. Read them for discovery only. Rule inlined in `skills/generator/generate-pages.md`. |
+| **Healer** | NEVER modify `*.helpers.ts` files. If a helper causes a failure, mark with `test.fixme('HELPER ISSUE: ...')` and document in the healer report. Pre-edit gate inlined in `skills/healer/apply-fix.md`. |
 | **Reviewer** | Verify specs import helpers class (not base) when helpers exist. Verify helpers follow naming conventions and have proper JSDoc. See `skills/reviewer/review-test-architecture.md`. |
 
 #### Team Checklist
@@ -494,7 +495,7 @@ Scout will then detect and report those components the same way it handles the b
 | Capability | Current State | Path Forward |
 |-----------|--------------|-------------|
 | Hybrid API + Web scenarios | Supported via `type=hybrid` with `{ page, request }` fixtures | Use `generate-hybrid-spec.md` skill |
-| Stakeholder reporting dashboards | Playwright HTML + JSON built-in; Allure and ReportPortal documented | See `skills/_shared/reporting.md` |
+| Stakeholder reporting dashboards | Playwright HTML + JSON built-in; Allure and ReportPortal documented | See `skills/_reference/reporting.md` |
 | Cross-browser testing | Config supports Chrome, Edge, Firefox, WebKit projects | Healer runs Chrome only for fast fix cycles; cross-browser belongs in CI |
 
 ---
@@ -603,9 +604,10 @@ Instead of monolithic agent instructions, the framework uses focused skill files
 
 | Directory | Purpose | Skill Count | Edit When... |
 |-----------|---------|-------------|-------------|
-| `skills/_shared/` | Cross-cutting rules: guardrails, paths, keywords, output structure, reporting | 5 | Changing framework-wide rules |
-| `skills/generator/` | Code generation: locators, pages, specs, test data, framework setup | 8 | Changing how tests are generated |
-| `skills/healer/` | Test healing: run, diagnose, fix, report | 7 | Changing diagnosis or fix behavior |
+| `skills/_shared/` | Shared runtime file: keyword-reference.md (loaded only during spec generation) | 1 | Adding new keywords (e.g., for new MCP servers) |
+| `skills/_reference/` | Archived human reference docs: guardrails, paths, output structure, reporting, fix-guardrails, post-stage-checklist | 7 | Updating canonical rules (then propagate to skills) |
+| `skills/generator/` | Code generation: locators, pages, specs, test data, framework setup, reports | 10 | Changing how tests are generated |
+| `skills/healer/` | Test healing: run, diagnose, fix, report | 6 | Changing diagnosis or fix behavior |
 | `skills/reviewer/` | Quality audit: 8 dimensions + scorecard aggregation | 9 | Changing quality standards |
 | `skills/healer-review/` | Review fix application: 8 dimension fixes + validation | 9 | Changing fix patterns |
 | `skills/analyst/` | Browser-based scenario execution | 1 | Changing element discovery |
@@ -653,7 +655,7 @@ Claude Code runs skills via subagents (Task tool):
 | Folder | Owned By | Committed to Git? | Notes |
 |--------|----------|-------------------|-------|
 | `CLAUDE.md` | QCoE (template repo) | Yes | Pipeline orchestrator |
-| `skills/` | QCoE (template repo) | Yes | Composable skill definitions (42 files) |
+| `skills/` | QCoE (template repo) | Yes | Composable skill definitions (44 files) |
 | `ARCHITECTURE.md` | QCoE (template repo) | Yes | Architecture decisions and rationale |
 | `templates/core/` | QCoE (template repo) | Yes | Source of truth for core files |
 | `templates/config/` | QCoE (template repo) | Yes | Config templates |
