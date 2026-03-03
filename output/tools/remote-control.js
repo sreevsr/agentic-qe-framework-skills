@@ -1,18 +1,19 @@
 /**
  * SCOUT AGENT — Remote Control
  * ==============================
- * 
+ *
  * Run this in Terminal 2 while the Scout Agent runs in Terminal 1.
- * 
+ * Both terminals should be in the output/ directory.
+ *
+ * Terminal 1:  npx playwright test tools/scout-agent-v4.spec.ts --project=chrome --headed --reporter=list
+ * Terminal 2:  node tools/remote-control.js
+ *
  * Controls:
  *   S  = Scan current page (instant)
  *   T  = Scan in 5 seconds (for tooltips/hovers — gives you time to hover)
  *   D  = Done — stop session and generate report
- * 
+ *
  * All keys are case-insensitive. No Enter key needed.
- * 
- * Usage:
- *   node remote-control.js
  */
 
 const fs = require('fs');
