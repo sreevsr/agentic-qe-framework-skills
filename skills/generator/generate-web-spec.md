@@ -114,17 +114,32 @@ For each scenario step, apply the corresponding keyword pattern from `keyword-re
 - **SAVE** → `saveState()` call
 - **USE_HELPER** → call helper method from registry
 
-### Step 5: Helper Method Resolution
+### Step 5: Helper Method Resolution (HARD STOP)
 
 For `USE_HELPER: PageName.methodName → {{variable}}`:
-1. Check the helper registry for the method
-2. If found: `const variable = await pageName.methodName();`
-3. If not found: emit warning comment `// WARNING: USE_HELPER requested but method not found`
+1. Check the helper registry (from `discover-helpers` skill) for the method
+2. **If found:** `const variable = await pageName.methodName();`
+3. **If NOT found — HARD STOP. The pipeline MUST NOT work around missing helpers.**
+
+**When the helpers file does not exist or the method is not found:**
+
+Do ALL of the following:
+1. Emit a warning comment at the USE_HELPER step location:
+```typescript
+// WARNING: USE_HELPER requested PageName.methodName but PageName.helpers.ts not found
+// ACTION REQUIRED: Team must create output/pages/PageName.helpers.ts with methodName()
+```
+2. Do NOT call the method — it does not exist.
+3. Do NOT add the method to the base page object. Base page objects are pipeline-owned and will be overwritten on regeneration. Custom business logic belongs exclusively in `*.helpers.ts` files.
+4. Do NOT implement equivalent inline logic in the spec as a workaround.
+5. The test WILL fail or must be wrapped in `test.fixme('HELPER ISSUE: USE_HELPER requested PageName.methodName but helpers file not found')`. This is the CORRECT outcome — it signals the team to create the helpers file.
+
+**Why this matters:** If the pipeline creates the missing method (in the page object or inline in the spec), it silently masks the missing team-owned file. The test will "pass" but the implementation is wrong — it will be overwritten on the next regeneration, and the team will never know they need to create the helpers file.
 
 For implicit trigger matching (step text matches `@scenario-triggers`):
 1. Check if any helper method's triggers match the step's natural language
 2. If match found: call the helper method
-3. If no match: generate inline code using base page methods
+3. If no match: generate inline code using base page methods only (no custom business logic)
 
 ## Prohibited Patterns
 - No direct Playwright API in tests (`page.click('selector')`) — always use page objects
@@ -141,6 +156,7 @@ For implicit trigger matching (step text matches `@scenario-triggers`):
 - [ ] DATASETS produce parameterized `for...of` loops
 - [ ] Multi-scenario uses `test.describe()` with `test.beforeEach()`
 - [ ] If helpers exist, spec imports helpers class (not base class)
+- [ ] If USE_HELPER references a missing helpers file, spec contains warning comment and `test.fixme()` — NOT inline logic
 - [ ] Every async call uses `await`
 - [ ] Import paths are correct relative to file location
 - [ ] Test count matches scenario count from analyst report

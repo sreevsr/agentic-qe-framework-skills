@@ -16,6 +16,14 @@ Before editing ANY file, check its path against these rules IN ORDER:
 | 5 | Assertion values (auto-generated) | **YES** | Update placeholder |
 | 6 | Everything else | **YES** | Direct fix |
 
+### Helper Boundary Enforcement (HARD STOP)
+
+In addition to the file-pattern gate above, the following edits are **ALWAYS PROHIBITED** regardless of which file is being modified:
+
+- **NEVER add methods to a base page object (`output/pages/{PageName}.ts`) that implement business logic belonging in `*.helpers.ts`.** If a test fails because a USE_HELPER method does not exist, the fix is `test.fixme('HELPER ISSUE: ...')` — NOT implementing the method in the base page object or inline in the spec.
+- **Signs that a fix violates this boundary:** The method performs multi-element calculations, bulk operations, data aggregation, business validation, or matches a `USE_HELPER` reference from the scenario.
+- **Why:** Base page objects are pipeline-owned and regenerated on every run. Any custom method added here will be overwritten. Team-maintained logic survives only in `*.helpers.ts` files.
+
 ## Process
 
 ### Fix by Category
@@ -56,6 +64,12 @@ Before editing ANY file, check its path against these rules IN ORDER:
 - Fix endpoint paths, auth headers, request body format
 - For persistence failures: check API Behavior header, then flag or adapt per guardrails
 
+**Category H — Missing Helper Method (HARD STOP — no code fix allowed):**
+- **Symptoms:** Test fails because a USE_HELPER method does not exist (no `*.helpers.ts` file, or method not exported)
+- **The ONLY allowed fix:** Wrap the affected test in `test.fixme('HELPER ISSUE: USE_HELPER requested PageName.methodName but helpers file not found')`
+- **NEVER:** implement the method in the base page object, create the helpers file, or add inline logic in the spec
+- This is not a healer failure — it is a signal that the team must create the helpers file
+
 ### Fix Rules
 
 - Keep changes minimal — fix ONLY what's broken
@@ -67,6 +81,6 @@ Before editing ANY file, check its path against these rules IN ORDER:
 ## Output
 For each fix applied, return:
 - File modified
-- Category (A-G)
+- Category (A-H)
 - Description of change
 - Whether a `test.fixme()` was used instead of a code fix

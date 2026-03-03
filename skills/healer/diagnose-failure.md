@@ -1,7 +1,7 @@
 # Skill: Diagnose Failure
 
 ## Purpose
-Classify each test failure into one of 7 diagnostic categories (A-G) to determine the correct fix strategy.
+Classify each test failure into one of 8 diagnostic categories (A-H) to determine the correct fix strategy.
 
 ## Rules
 - **Assertion Protection:** The Healer fixes TEST CODE (how we test). It must NEVER alter EXPECTED BEHAVIOR (what we test).
@@ -68,11 +68,22 @@ Classify each test failure into one of 7 diagnostic categories (A-G) to determin
 - DELETE returns 2xx but GET still returns resource → **POTENTIAL APPLICATION BUG**
 - **Exception:** If scenario declares `## API Behavior: mock`, the Healer may adapt.
 
+### Category H — Missing Helper Method (HARD STOP)
+- **Symptoms:** `is not a function`, `has no method`, `undefined is not a function`, or any error referencing a method that matches a `USE_HELPER` reference in the scenario. Also: test code contains `// WARNING: USE_HELPER requested` comment near the failure point.
+- **Root cause:** The scenario uses `USE_HELPER: PageName.methodName` but the corresponding `*.helpers.ts` file does not exist or does not export the method. This is intentional — the team has not yet created the helpers file.
+- **HARD STOP — Fix strategy:**
+  1. Wrap the affected test in `test.fixme('HELPER ISSUE: USE_HELPER requested PageName.methodName but helpers file not found')`
+  2. Do NOT implement the method anywhere — not in the base page object, not inline in the spec, not by creating the helpers file
+  3. Do NOT attempt any workaround (inline calculations, bulk operations, etc.)
+  4. This is NOT a healer failure. It is a signal that the team must create the `*.helpers.ts` file with the required method.
+- **Why:** Base page objects (`{PageName}.ts`) are pipeline-owned and regenerated on every run. Any method added here will be overwritten. `*.helpers.ts` files are team-owned and survive regeneration. The ownership boundary must never be violated.
+
 ## Diagnosis Process
 
 For each failure:
 1. Read the error message and stack trace
-2. Match against category symptoms
-3. If Category C: read the source scenario BEFORE deciding to change values
-4. If Category G: check the API Behavior header in the scenario
-5. Return: `{ testName, category, rootCause, fixStrategy, isPotentialBug }`
+2. **Before matching other categories:** Check if the error involves a method referenced by `USE_HELPER` in the scenario. If so → **Category H (HARD STOP)**. Do not classify as Category A or B — those would lead to implementing the method, which is prohibited.
+3. Match against category symptoms (A-G)
+4. If Category C: read the source scenario BEFORE deciding to change values
+5. If Category G: check the API Behavior header in the scenario
+6. Return: `{ testName, category, rootCause, fixStrategy, isPotentialBug }`

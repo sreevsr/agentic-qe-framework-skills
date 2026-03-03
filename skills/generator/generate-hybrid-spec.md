@@ -129,6 +129,8 @@ const apiResponse = await request.get(`/api/price-check?amount=${uiPrice}`); // 
 
 Hybrid specs support ALL keywords from `keyword-reference.md`. The only difference is that API steps use `request` and UI steps use `page`/page objects. Keywords like VERIFY, CAPTURE, CALCULATE, SCREENSHOT, REPORT, SAVE all work identically.
 
+**USE_HELPER:** Follow the HARD STOP rules in `keyword-reference.md`. If the helpers file does not exist or the method is not found, emit warning comments and use `test.fixme('HELPER ISSUE: ...')`. Do NOT implement the method in the base page object or inline in the spec.
+
 ## Prohibited Patterns
 - No `axios` or `fetch` — use Playwright `request` fixture
 - No `waitForTimeout()`
@@ -143,4 +145,5 @@ Hybrid specs support ALL keywords from `keyword-reference.md`. The only differen
 - [ ] Variables captured from API are accessible to UI steps and vice versa
 - [ ] Auth headers from environment variables
 - [ ] All keywords implemented correctly
+- [ ] If USE_HELPER references a missing helpers file, spec contains warning comment and `test.fixme()` — NOT inline logic
 - [ ] Tags include `@hybrid`

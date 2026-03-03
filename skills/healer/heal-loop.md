@@ -48,11 +48,12 @@ If all tests pass on first run → skip to Phase 5 (report).
 
 For each cycle:
 
-1. **Diagnose** each failure using `diagnose-failure` skill (Categories A-G)
-2. **Apply fix** for each failure using `apply-fix` skill (which checks `fix-guardrails` first)
-3. **Re-run tests** using `run-tests` skill
-4. If all pass → break out of loop
-5. If failures remain → continue to next cycle
+1. **Diagnose** each failure using `diagnose-failure` skill (Categories A-H)
+2. **Check for Category H (Missing Helper):** If any failure is diagnosed as Category H, do NOT attempt a code fix. The ONLY action is wrapping the affected test in `test.fixme('HELPER ISSUE: ...')`. Do NOT implement the missing method in the base page object or inline in the spec. This is a HARD STOP — no workaround is permitted.
+3. **Apply fix** for each non-Category-H failure using `apply-fix` skill (which checks pre-edit gate first)
+4. **Re-run tests** using `run-tests` skill
+5. If all tests pass or only `test.fixme()` tests remain → break out of loop
+6. If failures remain → continue to next cycle
 
 Stop after 3 cycles. Document remaining failures.
 
@@ -75,9 +76,11 @@ Track across cycles:
 | All tests pass | Generate report, exit |
 | 3 cycles exhausted | Generate report with remaining issues, exit |
 | Only `test.fixme()` tests remain | Generate report — these are bugs or helper issues, not healer failures |
+| Category H diagnosed (missing helper) | Apply `test.fixme('HELPER ISSUE: ...')`, do NOT count as a healer failure. Generate report with helper issue documented. |
 
 ## Rules
 - Run ONLY the current scenario's spec file — never run all tests
 - Never add `waitForTimeout()` to fix timing issues
 - Never skip or delete failing tests — fix them or flag with `test.fixme()`
 - Before EVERY fix, check the pre-edit gate (inlined in `apply-fix` skill)
+- NEVER implement missing helper methods — not in base page objects, not inline in specs. The ONLY response to a missing helper is `test.fixme('HELPER ISSUE: ...')`

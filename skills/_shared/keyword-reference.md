@@ -119,18 +119,31 @@ import testData from '../../test-data/web/saucedemo-checkout.json';
 
 Calls a method from a `*.helpers.ts` file. Format: `USE_HELPER: PageName.methodName` or `USE_HELPER: PageName.methodName → {{variable}}`.
 
+**When helpers file EXISTS** (discovered by `discover-helpers` skill):
 ```typescript
-// USE_HELPER: CartPage.calculateTotalPrice → {{cartTotal}}
-const cartTotal = await cartPage.calculateTotalPrice();
+// USE_HELPER: PageName.methodName → {{result}}
+const result = await pageName.methodName();
 
-// USE_HELPER: CartPage.validateAllCartPrices (no capture — just call it)
-await cartPage.validateAllCartPrices();
+// USE_HELPER: PageName.doSomething (no capture — just call it)
+await pageName.doSomething();
 ```
 
-If the helpers file does not exist or the method is not found, emit a warning comment:
+**HARD STOP — When helpers file DOES NOT EXIST or method is not found:**
+
+The pipeline MUST NOT implement the missing method. The correct behavior is:
+
+1. Emit a warning comment in the spec at the USE_HELPER step location:
 ```typescript
-// WARNING: USE_HELPER requested CartPage.calculateTotalPrice but CartPage.helpers.ts not found
+// WARNING: USE_HELPER requested PageName.methodName but PageName.helpers.ts not found
+// ACTION REQUIRED: Team must create output/pages/PageName.helpers.ts with methodName()
 ```
+
+2. Do NOT call the method — it does not exist.
+3. Do NOT add the method to the base page object (`PageName.ts`). That file is pipeline-owned and will be overwritten on regeneration. Custom business logic belongs exclusively in `*.helpers.ts` files.
+4. Do NOT implement equivalent inline logic in the spec as a workaround.
+5. The test WILL fail or must be wrapped in `test.fixme()`. This is the CORRECT outcome — it signals the team to create the helpers file.
+
+**Why this matters:** `*.helpers.ts` files are team-owned and survive regeneration. Base page objects are pipeline-owned and get overwritten. Adding helper logic to the base page object destroys the ownership boundary and will be lost when the pipeline runs again.
 
 ### API Steps — REST API Calls
 
