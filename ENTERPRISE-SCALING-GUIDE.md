@@ -30,12 +30,12 @@ The reusable engine containing agents, templates, core utilities, and prompt fil
 agentic-qe-framework-skills-v5/      ← Template repo
 ├── CLAUDE.md                         ← Pipeline orchestrator (always loaded)
 ├── ARCHITECTURE.md                   ← Architecture decisions and rationale
-├── skills/                           ← Composable skill files (44 files)
+├── skills/                           ← 36 executable skill files + 8 reference/shared docs
 │   ├── _shared/                      # Shared runtime: keyword-reference.md only
 │   ├── _reference/                   # Archived human reference docs (NOT loaded by LLM)
 │   ├── analyst/                      # Browser-based scenario execution
-│   ├── generator/                    # Code generation (8 skills)
-│   ├── healer/                       # Test healing (7 skills)
+│   ├── generator/                    # Code generation (10 skills)
+│   ├── healer/                       # Test healing (6 skills)
 │   ├── reviewer/                     # Quality audit (9 skills)
 │   ├── healer-review/                # Review fix application (9 skills)
 │   └── api-analyst/                  # Swagger scenario generation
@@ -621,7 +621,7 @@ scenario=my-feature type=web folder=cart
 │
 └── CLAUDE.md orchestrator reads skills based on type:
     ├── Analyst    → skills/analyst/analyze-scenario.md
-    ├── Generator  → skills/generator/ (8 skills composed by type)
+    ├── Generator  → skills/generator/ (10 skills composed by type)
     ├── Healer     → skills/healer/heal-loop.md (orchestrates sub-skills)
     ├── Reviewer   → skills/reviewer/ (8 dimensions + aggregate)
     └── Healer-Review (if needed) → skills/healer-review/ (dimension fixes)
@@ -655,7 +655,7 @@ Claude Code runs skills via subagents (Task tool):
 | Folder | Owned By | Committed to Git? | Notes |
 |--------|----------|-------------------|-------|
 | `CLAUDE.md` | QCoE (template repo) | Yes | Pipeline orchestrator |
-| `skills/` | QCoE (template repo) | Yes | Composable skill definitions (44 files) |
+| `skills/` | QCoE (template repo) | Yes | 36 executable skill files + 8 reference/shared docs |
 | `ARCHITECTURE.md` | QCoE (template repo) | Yes | Architecture decisions and rationale |
 | `templates/core/` | QCoE (template repo) | Yes | Source of truth for core files |
 | `templates/config/` | QCoE (template repo) | Yes | Config templates |

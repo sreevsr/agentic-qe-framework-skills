@@ -16,8 +16,8 @@ skills/                          # Composable skill definitions (self-contained)
   _shared/                       # keyword-reference.md only (loaded during spec generation)
   _reference/                    # Human reference docs — NOT loaded by LLM at runtime
   analyst/                       # Browser-based scenario execution
-  generator/                     # Code generation (8 skills)
-  healer/                        # Test healing (7 skills)
+  generator/                     # Code generation (10 skills)
+  healer/                        # Test healing (6 skills)
   reviewer/                      # Quality audit (9 skills)
   healer-review/                 # Review fix application (9 skills)
   api-analyst/                   # Swagger → scenario generation

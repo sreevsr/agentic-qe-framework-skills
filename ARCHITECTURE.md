@@ -74,7 +74,7 @@ skills/generator/
   setup-framework.md                   ← Core file setup (30 lines)
 ```
 
-8 focused skills replace 1 monolithic agent. The orchestrator (CLAUDE.md) composes the right combination based on scenario type. Each skill does exactly one thing.
+10 focused skills replace 1 monolithic agent. The orchestrator (CLAUDE.md) composes the right combination based on scenario type. Each skill does exactly one thing.
 
 ### 2.3 How Hybrid Support Illustrates the Difference
 
@@ -101,7 +101,7 @@ This is the core value proposition: **additive changes instead of invasive modif
 
 | Dimension | Agent-Based (Copilot Chat) | Skills-Based (Claude Code) |
 |-----------|---------------------------|----------------------------|
-| **File count** | 19 files (7 .agent.md + 5 agents/ + 7 .prompt.md) | 41 skill files + CLAUDE.md |
+| **File count** | 19 files (7 .agent.md + 5 agents/ + 7 .prompt.md) | 44 skill files + CLAUDE.md |
 | **Avg instructions per unit** | 200 lines/agent | 40 lines/skill |
 | **Runtime** | GitHub Copilot Chat (enterprise-ready) | Claude Code (personal/R&D) |
 | **Subagent support** | Flat only, no nesting | Subagents + agent teams |
@@ -116,7 +116,7 @@ This is the core value proposition: **additive changes instead of invasive modif
 
 ## 3. Skills Inventory
 
-### 3.1 Shared Rules (5 files in `skills/_shared/`)
+### 3.1 Shared Rules (1 file in `skills/_shared/`, 7 files in `skills/_reference/`)
 
 These are cross-cutting concerns referenced by multiple skills. They are the "constitution" of the framework.
 
@@ -128,24 +128,26 @@ These are cross-cutting concerns referenced by multiple skills. They are the "co
 | `output-structure.md` | Directory tree contract, file naming, create-if-missing vs always-recreate rules | Generator setup, reviewer maintainability |
 | `reporting.md` | Reporter configuration patterns: Playwright HTML (default), Allure, ReportPortal, JSON for dashboards | Generator setup-framework, reviewer configuration |
 
-### 3.2 Generator Skills (8 files)
+### 3.2 Generator Skills (10 files)
 
 Decomposed from `agents/02-generator.md` (357 lines).
 
 | Skill | Input | Output | Lines |
 |-------|-------|--------|-------|
 | `setup-framework.md` | templates/ directory | output/core/, config files | ~30 |
+| `setup-test-data.md` | Scenario .md, existing shared data | output/test-data/ | ~40 |
+| `discover-helpers.md` | output/pages/*.helpers.ts | In-memory helper registry | ~30 |
 | `generate-locators.md` | Analyst report, Scout report | output/locators/*.json | ~40 |
 | `generate-pages.md` | Locator JSON files | output/pages/*.ts | ~50 |
-| `discover-helpers.md` | output/pages/*.helpers.ts | In-memory helper registry | ~30 |
 | `generate-web-spec.md` | Analyst report, pages, helpers, scenario | output/tests/web/*.spec.ts | ~80 |
 | `generate-api-spec.md` | Scenario .md | output/tests/api/*.spec.ts | ~60 |
 | `generate-hybrid-spec.md` | Analyst report, pages, helpers, scenario | output/tests/web/*.spec.ts (with { page, request }) | ~90 |
-| `setup-test-data.md` | Scenario .md, existing shared data | output/test-data/ | ~40 |
+| `generate-report.md` | All generator outputs | generator-report-{scenario}.md | ~30 |
+| `generate-pipeline-summary.md` | All stage reports | pipeline-summary-{scenario}.md | ~40 |
 
-### 3.3 Healer Skills (7 files)
+### 3.3 Healer Skills (6 files)
 
-Decomposed from `agents/03-healer.md` (207 lines).
+Decomposed from `agents/03-healer.md` (207 lines). Note: `fix-guardrails.md` is in `skills/_reference/` (not loaded at runtime); its rules are inlined in `apply-fix.md`.
 
 | Skill | Purpose | Key Rule |
 |-------|---------|----------|
@@ -153,8 +155,7 @@ Decomposed from `agents/03-healer.md` (207 lines).
 | `pre-flight-validation.md` | Step count, imports, tsc --noEmit | Fix before first test run |
 | `run-tests.md` | Execute playwright test for specific spec | NEVER run all tests |
 | `diagnose-failure.md` | Classify into categories A-G | Category C: check scenario before changing values |
-| `apply-fix.md` | Apply targeted fix by category | MUST read fix-guardrails.md first |
-| `fix-guardrails.md` | BLOCK/ALLOW gate before every modification | Protects helpers, shared data, assertions |
+| `apply-fix.md` | Apply targeted fix by category (includes inlined pre-edit gate) | Protects helpers, shared data, assertions |
 | `generate-healer-report.md` | Format results into markdown | Include bugs, helper issues, remaining failures |
 
 ### 3.4 Reviewer Skills (9 files)
@@ -366,7 +367,7 @@ git checkout -b skills-architecture
 
 After implementation:
 
-1. All 41 skill files exist in correct directories
+1. All 44 skill files exist in correct directories
 2. Every rule from current `agents/0X-*.md` exists in exactly one skill file
 3. Every `skills/_shared/` file is referenced by at least one skill
 4. All guardrails preserved: helper protection, shared data protection, assertion protection, API Behavior escape hatch

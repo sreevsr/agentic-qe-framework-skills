@@ -47,7 +47,7 @@ Scout is NOT invoked by the pipeline. See `skills/scout/run-scout.md` for the fu
 
 ## Why Skills Architecture?
 
-This framework uses **44 focused skill files** instead of 5 monolithic agent instructions. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full rationale.
+This framework uses **36 executable skill files** (plus 8 reference/shared docs) instead of 5 monolithic agent instructions. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full rationale.
 
 | Benefit | How |
 |---------|-----|
@@ -93,7 +93,7 @@ agentic-qe-framework-skills-v5/
 ├── CLAUDE.md                        ← Pipeline orchestrator (always loaded by Claude Code)
 ├── ARCHITECTURE.md                  ← Architecture decisions and rationale
 ├── ENTERPRISE-SCALING-GUIDE.md      ← Multi-team scaling and CI/CD patterns
-├── skills/                          ← 44 composable skill files
+├── skills/                          ← 36 executable skill files + 8 reference/shared docs
 │   ├── _shared/                     ← Shared runtime file (1 file, loaded only during spec generation)
 │   │   └── keyword-reference.md     # Keyword → TypeScript code patterns
 │   ├── _reference/                  ← Archived human reference docs (NOT loaded by LLM)
