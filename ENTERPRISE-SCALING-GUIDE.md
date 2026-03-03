@@ -27,14 +27,19 @@ Maintain two tiers:
 The reusable engine containing agents, templates, core utilities, and prompt files. Never contains application-specific artifacts.
 
 ```
-agentic-qe-framework-enterprise/     ← Template repo
-├── .github/agents/                   ← Agent definitions (.agent.md)
-├── .github/prompts/                  ← Slash command templates (.prompt.md)
-├── agents/                           ← Detailed agent instructions (0X-*.md)
+agentic-qe-framework-skills-v5/      ← Template repo
+├── CLAUDE.md                         ← Pipeline orchestrator (always loaded)
+├── ARCHITECTURE.md                   ← Architecture decisions and rationale
+├── skills/                           ← Composable skill files (42 files)
+│   ├── _shared/                      # Cross-cutting rules (guardrails, paths, keywords)
+│   ├── analyst/                      # Browser-based scenario execution
+│   ├── generator/                    # Code generation (8 skills)
+│   ├── healer/                       # Test healing (7 skills)
+│   ├── reviewer/                     # Quality audit (9 skills)
+│   ├── healer-review/                # Review fix application (9 skills)
+│   └── api-analyst/                  # Swagger scenario generation
 ├── templates/core/                   ← Battle-hardened core files
 ├── templates/config/                 ← Configuration templates
-├── tests/web/scout-agent-v4.spec.ts  ← Scout Agent
-├── remote-control.js                 ← Scout remote control (Terminal 2)
 ├── scenarios/_template.md            ← Blank scenario template only
 └── ENTERPRISE-SCALING-GUIDE.md       ← This file
 ```
@@ -45,9 +50,8 @@ Each team forks the template repo and adds their application-specific scenarios.
 
 ```
 ars-connect-office-tests/             ← Team repo (forked from template)
-├── .github/agents/                   ← Inherited from template
-├── .github/prompts/                  ← Inherited from template
-├── agents/                           ← Inherited from template
+├── CLAUDE.md                         ← Inherited from template
+├── skills/                           ← Inherited from template
 ├── templates/                        ← Inherited from template
 ├── scenarios/
 │   ├── web/
@@ -77,10 +81,10 @@ ars-connect-office-tests/             ← Team repo (forked from template)
 
 ### Update Flow
 
-When you improve an agent prompt, fix `base-page.ts`, or add a new keyword:
+When you improve a skill file, fix `base-page.ts`, or add a new keyword:
 
 1. Push changes to the template repo
-2. Each team pulls the update (only `agents/`, `templates/`, `.github/` folders change)
+2. Each team pulls the update (only `skills/`, `templates/`, `CLAUDE.md` change)
 3. Team scenarios, output, and application-specific code remain untouched
 4. Re-run affected scenarios to pick up improvements
 
@@ -119,7 +123,7 @@ scenarios/
     └── products-crud.md
 ```
 
-Invocation: `@qe-orchestrator /orchestrator scenario=cart-feature type=web`
+Invocation: `scenario=cart-feature type=web`
 
 Generated output (reports at root of `output/`, spec under `tests/web/`):
 ```
@@ -151,7 +155,7 @@ scenarios/
         └── orders-lifecycle.md
 ```
 
-Invocation with folder: `@qe-orchestrator /orchestrator scenario=cart-crud type=web folder=cart`
+Invocation with folder: `scenario=cart-crud type=web folder=cart`
 
 Generated output (reports grouped under `output/{folder}/`, spec under `tests/web/{folder}/`):
 ```
@@ -254,11 +258,177 @@ npx playwright show-report
 
 ## 5. What Needs Team Awareness
 
-### Page Object Customization After Generation
+### Page Object Customization — The Helper Pattern
 
-The Generator creates page objects on first run. If a QE manually adds a complex helper method to a page object (e.g., a method that calculates total price), the Generator won't overwrite it on subsequent runs ("create if not exists" rule). However, if the QE deletes and regenerates, the customization is lost.
+The Generator creates page objects on first run ("create if not exists" rule). If you need to add custom business logic — price calculations, bulk operations, data validation — **never edit the generated page object directly**. Instead, use the **Helper Pattern**: a companion file that the Generator discovers and integrates automatically.
 
-**Rule:** Once you manually edit a page object, it's yours to maintain. Commit it to Git.
+#### Why Not Edit the Generated File?
+
+| Scenario | What Happens |
+|----------|-------------|
+| QE adds `calculateTotalPrice()` directly to `CartPage.ts` | Works until someone deletes and regenerates — customization lost |
+| New team member nukes `output/` and regenerates | Every team customization across every page object — wiped |
+| New scenario needs new methods on `CartPage` | Generator sees file exists, skips it. New methods must be added manually |
+| Two teams both manually edit `CartPage.ts` | Git merge conflict on a generated file |
+
+#### The Solution: `*.helpers.ts` Companion Files
+
+```
+output/pages/
+  CartPage.ts                  ← Pipeline-owned. Safe to regenerate.
+  CartPage.helpers.ts          ← Team-owned. Never touched by pipeline.
+  CheckoutPage.ts              ← Pipeline-owned.
+  CheckoutPage.helpers.ts      ← Team-owned (only if custom methods needed).
+  InventoryPage.ts             ← Pipeline-owned. No helpers needed = no file.
+```
+
+#### How to Create a Helper File
+
+```typescript
+// output/pages/CartPage.helpers.ts — TEAM-OWNED
+import { CartPage } from './CartPage';
+
+/**
+ * Custom helper methods for CartPage.
+ * Extends the generated CartPage with team-maintained business logic.
+ *
+ * @helpers CartPage
+ */
+export class CartPageWithHelpers extends CartPage {
+
+  /**
+   * Calculates the total price of all items currently in the cart.
+   *
+   * @returns Total price as a number (e.g., 29.99)
+   * @scenario-triggers calculate total, verify total price, sum all item prices
+   */
+  async calculateTotalPrice(): Promise<number> {
+    const priceElements = await this.page
+      .locator('[data-test="inventory-item-price"]')
+      .allTextContents();
+    return priceElements.reduce(
+      (sum, price) => sum + parseFloat(price.replace('$', '')),
+      0
+    );
+  }
+
+  /**
+   * Removes all items from the cart one by one.
+   *
+   * @scenario-triggers empty cart, remove all items, clear cart
+   */
+  async emptyCart(): Promise<void> {
+    const removeButtons = await this.page.locator('[data-test*="remove"]').all();
+    for (const btn of removeButtons) {
+      await btn.click();
+    }
+  }
+}
+```
+
+#### Conventions (Mandatory)
+
+| Convention | Example | Why |
+|---|---|---|
+| File name: `{PageName}.helpers.ts` | `CartPage.helpers.ts` | Generator discovers helpers by glob pattern |
+| Class name: `{PageName}WithHelpers` | `CartPageWithHelpers` | Predictable import for Generator |
+| `extends {PageName}` | `extends CartPage` | Inherits all generated methods |
+| `@helpers {PageName}` on class JSDoc | `@helpers CartPage` | AI maps helpers to correct page |
+| `@scenario-triggers` on each method | `@scenario-triggers calculate total, verify total price` | AI matches scenario steps to helper methods |
+
+#### How the Generator Uses Helpers
+
+The Generator runs a **Helper Discovery step** before generating spec files:
+
+1. Scans `output/pages/*.helpers.ts`
+2. Reads each file, extracts class names and `@scenario-triggers`
+3. When generating a spec, if a page has a helpers file:
+   ```typescript
+   // Generator produces this import (aliased to base name):
+   import { CartPageWithHelpers as CartPage } from '../pages/CartPage.helpers';
+   // Instead of:
+   import { CartPage } from '../pages/CartPage';
+   ```
+4. If a scenario step matches a `@scenario-triggers` phrase, the Generator calls the helper method instead of generating inline code
+
+The alias (`as CartPage`) means all generated method calls still work — `CartPageWithHelpers` inherits everything from `CartPage`. The helpers are additional methods on top.
+
+#### The `USE_HELPER` Keyword (Explicit Control)
+
+For cases where you want to **explicitly** tell the Generator to use a specific helper:
+
+```markdown
+# Scenario: Verify cart total after adding multiple items
+
+1. Navigate to {{ENV.BASE_URL}}
+2. Login with {{ENV.TEST_USERNAME}} / {{ENV.TEST_PASSWORD}}
+3. Add "Sauce Labs Backpack" to cart
+4. Add "Sauce Labs Bike Light" to cart
+5. Click cart icon
+6. USE_HELPER: CartPage.calculateTotalPrice → {{cartTotal}}
+7. VERIFY: {{cartTotal}} equals 39.98
+```
+
+- `USE_HELPER: PageName.methodName` — calls the method
+- `USE_HELPER: PageName.methodName → {{variable}}` — calls and captures the return value
+- The `@scenario-triggers` matching handles implicit discovery. `USE_HELPER` removes ambiguity when you know exactly which helper you want.
+
+#### Using Shared Data in Helpers
+
+Helper classes can import `loadSharedData` or `loadTestData` from `core/test-data-loader` to access shared JSON data:
+
+```typescript
+import { CartPage } from './CartPage';
+import { loadSharedData } from '../core/test-data-loader';
+
+export class CartPageWithHelpers extends CartPage {
+
+  /**
+   * Validates all cart item prices against the shared product catalog.
+   * @scenario-triggers validate cart prices, verify all prices correct
+   */
+  async validateAllCartPrices(): Promise<{ item: string; expected: string; actual: string; match: boolean }[]> {
+    const { products } = loadSharedData('products');
+    const results = [];
+    for (const product of products) {
+      if (await this.isProductInCart(product.name)) {
+        const actual = await this.page
+          .locator('.cart_item')
+          .filter({ hasText: product.name })
+          .locator('.inventory_item_price')
+          .textContent() ?? '';
+        results.push({
+          item: product.name,
+          expected: product.expectedPrice,
+          actual: actual.trim(),
+          match: actual.trim() === product.expectedPrice,
+        });
+      }
+    }
+    return results;
+  }
+}
+```
+
+Helpers can **read** shared data freely. Helpers must **never write** to `test-data/shared/` — that data is owned by the team lead, not individual helpers.
+
+#### Pipeline Guardrails
+
+| Stage | Rule |
+|---|---|
+| **Generator** | NEVER create, modify, or delete `*.helpers.ts` files. Read them for discovery only. See `skills/_shared/guardrails.md`. |
+| **Healer** | NEVER modify `*.helpers.ts` files. If a helper causes a failure, mark with `test.fixme('HELPER ISSUE: ...')` and document in the healer report. See `skills/healer/fix-guardrails.md`. |
+| **Reviewer** | Verify specs import helpers class (not base) when helpers exist. Verify helpers follow naming conventions and have proper JSDoc. See `skills/reviewer/review-test-architecture.md`. |
+
+#### Team Checklist
+
+1. Name the file `{PageName}.helpers.ts` in `output/pages/`
+2. Export class `{PageName}WithHelpers` extending `{PageName}`
+3. Add `@helpers {PageName}` to the class JSDoc
+4. Add `@scenario-triggers` to every method JSDoc — list phrases that should invoke this method
+5. Optionally use `USE_HELPER` keyword in scenarios for explicit control
+6. Commit the helpers file to Git — it is team-owned and survives regeneration
+7. Never put custom logic in the generated page object — use the helpers file
 
 ### Modifying an Existing Scenario
 
@@ -272,9 +442,50 @@ Scenario A creates a user, Scenario B logs in as that user. Within a single spec
 
 **Rule:** For cross-file dependencies, create a setup script or shared fixture manually. The framework doesn't auto-generate these.
 
-### Custom Component Libraries
+### Custom Component Libraries — Scout DOM Reconnaissance
 
-If the customer uses an in-house component library with proprietary class names, Scout won't detect it. The team would need to add detection patterns to `scout-agent-v4.spec.ts` (add the prefix to `LIBS` and component patterns to `COMP_MAP`).
+Enterprise applications commonly use component libraries whose controls (ComboBoxes, DataGrids, Modals, Date pickers) require multi-step interaction sequences that a plain Playwright selector cannot handle. Scout solves this by scanning the live DOM before the pipeline runs and producing a machine-readable inventory that the Generator and Healer consume automatically.
+
+#### When to Run Scout
+
+| Situation | Action |
+|-----------|--------|
+| Standard HTML forms, buttons, links | Skip Scout — the Analyst stage is sufficient |
+| Any of the 7 known component libraries detected in the app | **Run Scout before the pipeline** |
+| Unknown/custom component library | Run Scout and add custom patterns (see below) |
+| UI has changed significantly since last Scout run | Re-run Scout, then re-run affected scenarios |
+
+#### Supported Libraries (out of the box)
+
+| Library | Class Prefix | Detects |
+|---------|-------------|---------|
+| Fluent UI v9 | `fui-` | Combobox, Dropdown, DataGrid, Dialog, Tab, Menu, SpinButton, Slider |
+| Fluent UI v8 | `ms-` | ComboBox, Dropdown, DetailsList, Panel, Pivot, CommandBar, DatePicker |
+| Material UI (MUI) | `Mui` | Select, Autocomplete, DataGrid, Drawer, Tab, TextField |
+| Ant Design | `ant-` | Select, Modal, Drawer, Table, Tree, Cascader, Tabs, Menu |
+| PrimeNG / PrimeReact | `p-` | Dropdown, DataTable, Dialog, MultiSelect, AutoComplete |
+| Bootstrap | `btn-`, `form-` | Select, Modal, Nav Tabs, Input |
+| Kendo UI | `k-` | Dropdown, ComboBox, Grid, Dialog, DatePicker |
+
+#### Workflow
+
+1. **Configure** — edit `output/tools/scout-agent-v4.spec.ts`, set `startUrl`, `scenarioName`, and `appFolder` to match your scenario
+2. **Scan** — open two terminals in `output/`, run Scout in Terminal 1 and remote-control in Terminal 2; navigate to each page and press **S** to scan, **D** when done
+3. **Run the pipeline** — the Generator reads the Scout report automatically and uses the correct selectors and interaction patterns; the Healer also checks it when diagnosing locator failures
+
+No extra pipeline invocation flags needed — if `output/scout-reports/{folder}/{scenario}-page-inventory-latest.md` exists, the pipeline picks it up.
+
+See `skills/scout/run-scout.md` for the full setup guide and remote control key reference.
+
+#### Adding Custom In-House Component Libraries
+
+If the application uses a proprietary component library not in the table above, add detection patterns to `output/tools/scout-agent-v4.spec.ts`:
+
+1. Add a library prefix entry to `LIB_PATTERNS`
+2. Add component patterns to `COMPONENT_MAP` with the correct METHOD and INTERACTION for each control
+3. Add class selectors to `INTERACTIVE_SELECTORS`
+
+Scout will then detect and report those components the same way it handles the built-in libraries.
 
 ---
 
@@ -282,15 +493,15 @@ If the customer uses an in-house component library with proprietary class names,
 
 | Capability | Current State | Path Forward |
 |-----------|--------------|-------------|
-| Hybrid API + Web scenarios | Not supported (web and API are separate types) | New `type=hybrid` mode needed |
-| Stakeholder reporting dashboards | Playwright HTML report only | Integrate Allure, ReportPortal, or custom dashboards |
+| Hybrid API + Web scenarios | Supported via `type=hybrid` with `{ page, request }` fixtures | Use `generate-hybrid-spec.md` skill |
+| Stakeholder reporting dashboards | Playwright HTML + JSON built-in; Allure and ReportPortal documented | See `skills/_shared/reporting.md` |
 | Cross-browser testing | Config supports Chrome, Edge, Firefox, WebKit projects | Healer runs Chrome only for fast fix cycles; cross-browser belongs in CI |
 
 ---
 
 ## 7. CI/CD Integration
 
-The agentic pipeline (Analyst → Generator → Healer → Reviewer) runs at **development time** in VS Code. It produces deterministic, production-ready Playwright test scripts. CI/CD pipelines run these scripts like any conventional test suite — no AI, no tokens, no agents.
+The agentic pipeline (Analyst → Generator → Healer → Reviewer) runs at **development time** in Claude Code. It produces deterministic, production-ready Playwright test scripts. CI/CD pipelines run these scripts like any conventional test suite — no AI, no tokens, no agents.
 
 ### The Model
 
@@ -363,11 +574,11 @@ The `playwright.config.ts` reads `TEST_ENV` to load the correct `.env.{env}` fil
 ### Day-to-Day
 
 1. QE writes scenario `.md` file (plain English, 10-20 lines)
-2. QE runs `@qe-orchestrator /orchestrator scenario=my-feature type=web` (add `folder=X` if using subfolder structure)
+2. QE runs the pipeline in Claude Code: `scenario=my-feature type=web` (add `folder=X` if using subfolder structure)
 3. Pipeline generates framework, heals tests, audits quality
 4. QE reviews `pipeline-summary-my-feature.md` and `review-scorecard-my-feature.md`
 5. If APPROVED → commit output to Git
-6. If NEEDS FIXES → run `@qe-healer-review /healer-review scenario=my-feature type=web`
+6. If NEEDS FIXES → Healer-Review stage runs automatically (Stage 5)
 
 ### Sprint Cadence
 
@@ -378,59 +589,62 @@ The `playwright.config.ts` reads `TEST_ENV` to load the correct `.env.{env}` fil
 ### Maintenance
 
 - **Selector changes:** Edit locator JSON → re-run affected tests
-- **New page in app:** Run Scout to detect components → run pipeline for scenario touching new page
+- **New page in app:** If the page uses a component library, run Scout on it first (`tools/scout-agent-v4.spec.ts`) to capture selectors and interaction patterns, then run the pipeline for the scenario touching that page
+- **UI library upgrade** (e.g., Fluent UI v8 → v9): Re-run Scout across all affected pages before re-running the pipeline — class prefixes change between major versions (`ms-` → `fui-`)
 - **Framework upgrade:** Pull latest from template repo → re-run scenarios to verify
 
 ---
 
-## 9. Prompt Architecture
+## 9. Skills Architecture
 
-### Three-File System
+### Composable Skills System
 
-Each agent has three layers of instructions that work together:
+Instead of monolithic agent instructions, the framework uses focused skill files (30-80 lines each) that compose differently based on scenario type:
 
-| File | Location | Purpose | Edit When... |
-|------|----------|---------|-------------|
-| `.agent.md` | `.github/agents/` | Agent identity, permanent rules, tool permissions. Always loaded by Copilot Chat when the agent is invoked. | Changing what the agent is allowed to do |
-| `0X-*.md` | `agents/` | Detailed step-by-step instructions. Referenced by `.agent.md` via "Read agents/0X-*.md for your instructions." | Changing how the agent performs its work |
-| `.prompt.md` | `.github/prompts/` | Runtime template with `{{scenario}}`, `{{type}}`, `{{folder}}` variable substitution. Loaded when the slash command is used. | Changing parameters passed to the agent per run |
+| Directory | Purpose | Skill Count | Edit When... |
+|-----------|---------|-------------|-------------|
+| `skills/_shared/` | Cross-cutting rules: guardrails, paths, keywords, output structure, reporting | 5 | Changing framework-wide rules |
+| `skills/generator/` | Code generation: locators, pages, specs, test data, framework setup | 8 | Changing how tests are generated |
+| `skills/healer/` | Test healing: run, diagnose, fix, report | 7 | Changing diagnosis or fix behavior |
+| `skills/reviewer/` | Quality audit: 8 dimensions + scorecard aggregation | 9 | Changing quality standards |
+| `skills/healer-review/` | Review fix application: 8 dimension fixes + validation | 9 | Changing fix patterns |
+| `skills/analyst/` | Browser-based scenario execution | 1 | Changing element discovery |
+| `skills/api-analyst/` | Swagger → scenario generation | 1 | Changing API scenario templates |
+| `skills/scout/` | Pre-pipeline DOM reconnaissance for component-library apps | 1 | Changing Scout usage instructions or library support notes |
 
-**Important:** When the orchestrator delegates to a subagent, the subagent receives the orchestrator's delegation prompt + its own `.agent.md` + reads `agents/0X-*.md`. It does **not** go through its own `.prompt.md`. The `.prompt.md` is only used for standalone slash command invocations.
-
-When editing agent behavior, ensure changes are consistent across all three layers. The `agents/0X-*.md` file is where agents get their detailed instructions — changes here take precedence over vague guidance in `.agent.md`.
-
-### Agent Invocation (Standalone)
-
-```
-@qe-planner /analyst scenario=my-feature
-│            │       │
-│            │       └── Parameters (fill {{scenario}} in .prompt.md)
-│            └── Slash command (loads .prompt.md)
-└── Custom agent (loads .agent.md, which references agents/01-analyst.md)
-```
-
-### Agent Invocation (Via Orchestrator)
+### Pipeline Invocation
 
 ```
-@qe-orchestrator /orchestrator scenario=my-feature type=web folder=cart
+scenario=my-feature type=web folder=cart
 │
-└── Orchestrator delegates to subagents sequentially:
-    ├── QE Planner    → .agent.md + delegation prompt → reads agents/01-analyst.md
-    ├── QE Generator  → .agent.md + delegation prompt → reads agents/02-generator.md
-    ├── QE Healer     → .agent.md + delegation prompt → reads agents/03-healer.md
-    ├── QE Reviewer   → .agent.md + delegation prompt → reads agents/04-reviewer.md
-    └── QE Healer Review (if needed) → .agent.md + delegation prompt → reads agents/03-healer.md
+└── CLAUDE.md orchestrator reads skills based on type:
+    ├── Analyst    → skills/analyst/analyze-scenario.md
+    ├── Generator  → skills/generator/ (8 skills composed by type)
+    ├── Healer     → skills/healer/heal-loop.md (orchestrates sub-skills)
+    ├── Reviewer   → skills/reviewer/ (8 dimensions + aggregate)
+    └── Healer-Review (if needed) → skills/healer-review/ (dimension fixes)
 ```
 
-### Orchestrator Subagent Architecture
+### Type Routing (Key Advantage)
 
-The orchestrator uses VS Code 1.109 subagent support:
+The orchestrator (CLAUDE.md) composes different skills based on `type`:
 
-- Each agent runs in its own context window (no cross-contamination)
-- The Planner subagent gets Playwright MCP tools (browser access)
-- Generator, Healer, Reviewer get terminal and file editing tools
-- Output files in `output/` serve as the handoff mechanism between agents
-- The orchestrator verifies each agent's output file exists before proceeding to the next stage
+| Type | Analyst | Locators/Pages | Spec Skill | Review Dims |
+|------|---------|---------------|------------|------------|
+| `web` | Yes | Yes | `generate-web-spec.md` | 1-7 |
+| `api` | No | No | `generate-api-spec.md` | 2-8 |
+| `hybrid` | Yes | Yes | `generate-hybrid-spec.md` | 1-8 |
+
+Adding a new type requires only 1 new skill file + 1 line in CLAUDE.md. Zero existing skill modifications.
+
+### Subagent Architecture
+
+Claude Code runs skills via subagents (Task tool):
+
+- Each stage runs in its own context window
+- Reviewer dimensions can run as parallel subagents for speed
+- Output files in `output/` serve as the handoff between stages
+- The orchestrator verifies output files exist before proceeding
 
 ---
 
@@ -438,14 +652,15 @@ The orchestrator uses VS Code 1.109 subagent support:
 
 | Folder | Owned By | Committed to Git? | Notes |
 |--------|----------|-------------------|-------|
-| `.github/agents/` | QCoE (template repo) | Yes | Agent identity files |
-| `.github/prompts/` | QCoE (template repo) | Yes | Slash command templates |
-| `agents/` | QCoE (template repo) | Yes | Detailed agent instructions |
+| `CLAUDE.md` | QCoE (template repo) | Yes | Pipeline orchestrator |
+| `skills/` | QCoE (template repo) | Yes | Composable skill definitions (42 files) |
+| `ARCHITECTURE.md` | QCoE (template repo) | Yes | Architecture decisions and rationale |
 | `templates/core/` | QCoE (template repo) | Yes | Source of truth for core files |
 | `templates/config/` | QCoE (template repo) | Yes | Config templates |
 | `scenarios/` | Team | Yes | Application-specific test scenarios |
 | `scout-reports/` | Generated (app-specific) | No (gitignored) | DOM intelligence reports |
 | `output/` | Generated (shared project) | No (gitignored) | One shared project for all scenarios |
-| `output/pages/` | Generated then team-maintained | Optional | Commit if manually customized |
+| `output/pages/*.ts` | Generated (pipeline-owned) | Optional | Safe to regenerate. Do not add custom logic here |
+| `output/pages/*.helpers.ts` | Team-maintained | Yes (always) | Custom helper methods. Never touched by pipeline |
 | `output/locators/` | Generated then team-maintained | Optional | Commit if manually customized |
 | `.env` | Team (secrets) | No (gitignored) | Only `.env.example` is committed |

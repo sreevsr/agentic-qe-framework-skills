@@ -1,0 +1,21 @@
+# Environment files with real credentials
+.env
+.env.local
+.env.*.local
+.env.prod
+.env.production
+
+# Test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+*.mp4
+*.webm
+
+# Build outputs
+dist/
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
