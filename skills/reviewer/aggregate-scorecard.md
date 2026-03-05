@@ -25,7 +25,16 @@ Scores and findings from all dimension reviews:
 
 **NEEDS FIXES:** Score < 32/40 OR any dimension scores 1-2.
 
-If API Test Quality is N/A, calculate out of 35 instead of 40. Approval threshold becomes >= 28/35.
+If API Test Quality is N/A (web-only or mobile), calculate out of 35 instead of 40. Approval threshold becomes >= 28/35.
+
+**Type-specific scoring:**
+
+| Type | Dimensions scored | Max | Approval threshold |
+|------|------------------|-----|-------------------|
+| `web` | 1–7 (API Quality N/A) | 35 | >= 28/35, no dim < 3 |
+| `api` | 2–8 (Locator Quality N/A) | 35 | >= 28/35, no dim < 3 |
+| `hybrid` | 1–8 (all) | 40 | >= 32/40, no dim < 3 |
+| `mobile` | 1–7 + Mobile Quality (9); API Quality N/A | 40 | >= 32/40, no dim < 3 |
 
 ## Output Path
 - With folder: `output/{folder}/review-scorecard-{scenario}.md`
@@ -38,20 +47,21 @@ If API Test Quality is N/A, calculate out of 35 instead of 40. Approval threshol
 **Date:** [today]
 **Time:** [HH:MM UTC]
 **Scenario:** [scenario name]
-**Type:** [web/api/hybrid]
+**Type:** [web/api/hybrid/mobile]
 **Framework:** output/ directory
 **Overall Score:** [sum]/[max] ([percentage]%)
 
 | # | Dimension | Weight | Score | Key Finding |
 |---|-----------|--------|-------|-------------|
-| 1 | Locator Quality | High | _/5 | [summary] |
+| 1 | Locator Quality | High | _/5 | [summary or N/A for api] |
 | 2 | Wait Strategy | High | _/5 | [summary] |
 | 3 | Test Architecture | Medium | _/5 | [summary] |
 | 4 | Configuration | Medium | _/5 | [summary] |
 | 5 | Code Quality | Low | _/5 | [summary] |
 | 6 | Maintainability | Medium | _/5 | [summary] |
 | 7 | Security | High | _/5 | [summary] |
-| 8 | API Test Quality | Medium | _/5 | [summary or N/A] |
+| 8 | API Test Quality | Medium | _/5 | [summary or N/A for web/mobile] |
+| 9 | Mobile Quality | High | _/5 | [summary or N/A for web/api/hybrid] |
 
 ## Detailed Findings
 

@@ -1,7 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "mcp__playwright__*"
-    ]
+      "mcp__playwright__*",
+      "mcp__appium__*",
+      "Edit(*)",
+      "Write(*)",
+      "NotebookEdit(*)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(cd *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(mkdir *)",
+      "Bash(git status*)",
+      "Bash(git diff*)"
+    ],
+    "deny": []
   }
 }
