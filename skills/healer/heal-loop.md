@@ -1,7 +1,7 @@
 # Skill: Heal Loop — Orchestrate the Full Healing Cycle
 
 ## Purpose
-Entry point for Stage 3 (Healer). Orchestrates the full cycle: pre-flight validation → run tests → diagnose failures → apply fixes → re-run. Maximum 3 fix-and-rerun cycles.
+Entry point for Stage 3 (Healer). Orchestrates the full cycle: pre-flight validation → run tests → diagnose failures → apply fixes → re-run. Maximum 3 fix-and-rerun cycles (5 for `type=mobile` due to device state complexity).
 
 ## Paths
 Test command (always run ONLY the current scenario's spec file):
@@ -44,18 +44,21 @@ Invoke `run-tests` skill to execute ONLY the current scenario's spec file.
 
 If all tests pass on first run → skip to Phase 5 (report).
 
-### Phase 4: Fix Cycles (max 3)
+### Phase 4: Fix Cycles (max 3 for web/api/hybrid, max 5 for mobile)
+
+Mobile tests get 5 cycles because device state, app warm-start, and Compose UI issues often need more iterations to diagnose and resolve.
 
 For each cycle:
 
-1. **Diagnose** each failure using `diagnose-failure` skill (Categories A-H)
+1. **Diagnose** each failure using `diagnose-failure` skill (Categories A-H) or `diagnose-failure-mobile` (Categories M-A through M-I) for `type=mobile`
 2. **Check for Category H (Missing Helper):** If any failure is diagnosed as Category H, do NOT attempt a code fix. The ONLY action is wrapping the affected test in `test.fixme('HELPER ISSUE: ...')`. Do NOT implement the missing method in the base page object or inline in the spec. This is a HARD STOP — no workaround is permitted.
-3. **Apply fix** for each non-Category-H failure using `apply-fix` skill (which checks pre-edit gate first)
-4. **Re-run tests** using `run-tests` skill
-5. If all tests pass or only `test.fixme()` tests remain → break out of loop
-6. If failures remain → continue to next cycle
+3. **Same-root-cause detection:** Before applying a fix, check if this cycle's diagnosis matches a PREVIOUS cycle's diagnosis (same category, same element, same screen). If the same root cause has persisted for **3 consecutive cycles** despite fixes, STOP fixing that test — the issue is likely a fundamental accessibility gap or business logic constraint, not a fixable locator/timing problem. Wrap it in `test.fixme('UNFIXABLE: [root cause] persisted across 3 cycles — likely inaccessible widget or business logic constraint')` and document in the healer report.
+4. **Apply fix** for each non-Category-H failure using `apply-fix` skill (which checks pre-edit gate first)
+5. **Re-run tests** using `run-tests` skill
+6. If all tests pass or only `test.fixme()` tests remain → break out of loop
+7. If failures remain → continue to next cycle
 
-Stop after 3 cycles. Document remaining failures.
+Stop after max cycles. Document remaining failures.
 
 ### Phase 5: Generate Report
 
@@ -68,15 +71,17 @@ Track across cycles:
 - Which fixes were applied (file, category, description)
 - Which tests were flagged as potential bugs (`test.fixme()`)
 - Which tests had helper issues (`test.fixme('HELPER ISSUE: ...')`)
+- **Root cause history per test** — track the diagnosis category and failing element for each cycle to detect same-root-cause repetition
 
 ## Exit Conditions
 
 | Condition | Action |
 |-----------|--------|
 | All tests pass | Generate report, exit |
-| 3 cycles exhausted | Generate report with remaining issues, exit |
+| Max cycles exhausted (3 for web/api/hybrid, 5 for mobile) | Generate report with remaining issues, exit |
 | Only `test.fixme()` tests remain | Generate report — these are bugs or helper issues, not healer failures |
 | Category H diagnosed (missing helper) | Apply `test.fixme('HELPER ISSUE: ...')`, do NOT count as a healer failure. Generate report with helper issue documented. |
+| Same root cause persisted 3 consecutive cycles | Apply `test.fixme('UNFIXABLE: ...')`, stop retrying that test. Document the inaccessible widget or business logic constraint. |
 
 ## Rules
 - Run ONLY the current scenario's spec file — never run all tests

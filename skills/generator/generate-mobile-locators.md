@@ -51,6 +51,16 @@ Each file is a flat map from element key (camelCase) to a strategy object:
 - Index-based xpaths (`//android.widget.LinearLayout[3]/android.widget.Button[1]`) — fragile
 - Fully-dynamic content-desc values that change with data
 
+**Screen-scoped locators (CRITICAL):**
+Locators MUST uniquely identify elements on their own screen, not just anywhere in the app. A locator like `textContains("Homes in")` that matches elements on MULTIPLE screens will cause cross-screen false matches — tests will think they're on the results screen when they're still on the home screen.
+
+For each locator, verify:
+1. The text/attribute is unique to THIS screen (not a common phrase appearing on home, nav, or other screens)
+2. If the text is generic (e.g., "Search", "Next", "Back"), scope it with a parent or combine with element class:
+   - WRONG: `//android.widget.TextView[@text='Search']` (matches on many screens)
+   - RIGHT: `//android.widget.TextView[@text='Search' and ancestor::*[@content-desc='filter-panel']]` (scoped to filter panel)
+3. For screen identification elements (used in `waitForScreen()`), prefer elements with `accessibility_id` or `content-desc` that are unique to that screen (e.g., a back button with screen-specific label like `"Go back to the previous search"`)
+
 If an element only has a dynamic ID, use `xpath` with a stable attribute instead:
 ```json
 {
@@ -106,3 +116,4 @@ ProductScreen    → product-screen.locators.json
 - [ ] No auto-generated dynamic IDs
 - [ ] camelCase keys, kebab-case file names
 - [ ] `accessibility_id` listed before `id` before `xpath` in each entry (for readability)
+- [ ] **Screen-scoped**: No locator uses `textContains` or `text` values that appear on multiple screens (verify against analyst report Screen Map)

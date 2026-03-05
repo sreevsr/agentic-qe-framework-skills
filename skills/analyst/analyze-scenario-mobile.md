@@ -163,6 +163,34 @@ The scenario contains DATASETS with [N] rows. Only row 1 was executed.
 - With folder: `output/{folder}/analyst-report-{scenario}.md`
 - Without folder: `output/analyst-report-{scenario}.md`
 
+## Mandatory Widget Accessibility Probe
+
+During Step 3, whenever the scenario flow requires interaction with a **complex widget** (date picker, calendar, stepper/counter, slider, color picker, custom dropdown), you MUST probe its accessibility:
+
+1. **Call `page_source`** on the widget's screen
+2. **Inspect child elements** — do they have `text`, `content-desc`, `resource-id`, or `accessibility_id`?
+3. **Classify** the widget:
+   - **ACCESSIBLE**: Child elements have stable, distinguishable attributes (e.g., each date cell has `text="15"`)
+   - **PARTIALLY ACCESSIBLE**: Some children have attributes but key interactive elements don't (e.g., month header has text but date cells don't)
+   - **INACCESSIBLE**: Children are generic `android.view.View` / `XCUIElementTypeOther` with no distinguishing attributes (common in Jetpack Compose custom renders)
+
+4. **Document in the report** under a new section `## Widget Accessibility`:
+
+```markdown
+## Widget Accessibility
+| Widget | Screen | Classification | Notes |
+|--------|--------|---------------|-------|
+| Date Picker | SearchFilterScreen | INACCESSIBLE | Calendar cells are Compose Views with no text/content-desc |
+| Guest Counter | SearchFilterScreen | PARTIALLY ACCESSIBLE | Labels have text but +/- buttons have no identifiers |
+```
+
+5. **If a mandatory widget is INACCESSIBLE** (the scenario CANNOT proceed without interacting with it):
+   - Try alternative paths: "Flexible" option, "Skip" button, default selection, nearby suggestions that bypass the widget
+   - If an alternative path works, document it as the **recommended flow** in the report
+   - If NO alternative exists, add to Issues Found: `⚠️ INACCESSIBLE MANDATORY WIDGET: [widget name] on [screen] — scenario may not be automatable. Generator should simplify the flow to avoid this widget.`
+
+This probe prevents wasted healer cycles on fundamentally inaccessible UI elements.
+
 ## Critical Reminders
 - Call `page_source` BEFORE and AFTER every interaction — mobile UIs change dramatically on each action
 - Record ALL interactive elements per screen, not just the ones in the scenario steps

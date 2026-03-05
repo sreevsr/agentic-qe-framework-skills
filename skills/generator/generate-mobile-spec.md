@@ -117,7 +117,28 @@ All keywords from `keyword-reference.md` apply. Mobile-specific mappings:
 | REPORT | `console.log()` + annotation | `console.log()` (no test.info in Mocha — use console) |
 | SAVE | `saveState('key', val)` | `saveState('key', val)` (identical) |
 
-### Step 5: App Launch and Session State Management
+### Step 5: Debug Screenshots Between Critical Steps
+
+For mobile tests, insert `takeScreenshot()` calls at key navigation boundaries to aid diagnosis if the test fails in the healer stage. Without these, the healer wastes cycles guessing which screen the app is on.
+
+**Insert a screenshot AFTER every screen transition** (not after every action — only when the expected screen changes):
+
+```typescript
+// After navigating to a new screen
+await filterScreen.tapSearch();
+await filterScreen.takeScreenshot('debug-after-search-tap');  // Where did we land?
+
+// Before assertions that depend on being on the right screen
+await resultsScreen.takeScreenshot('debug-before-results-check');
+const title = await resultsScreen.getResultsTitle();
+expect(title).toContain('Homes in');
+```
+
+**Naming convention:** `debug-{scenario}-{step-description}` (e.g., `debug-airbnb-after-search-tap`)
+
+These screenshots are automatically saved by `BaseScreen.takeScreenshot()` and are invaluable for the healer's `diagnose-failure-mobile` skill. They cost ~200ms each — negligible compared to a wasted healer cycle.
+
+### Step 6: App Launch and Session State Management
 
 Unlike web tests (where each test gets a fresh browser context), **WDIO reuses a single session across all tests**. `noReset: false` only applies at session creation, not between tests. This means:
 
@@ -180,7 +201,7 @@ await sideMenu.waitForElement('targetItem');
 await sideMenu.tapTarget();
 ```
 
-### Step 6: Helper Method Resolution (HARD STOP)
+### Step 7: Helper Method Resolution (HARD STOP)
 
 Identical rules as `generate-web-spec.md`:
 - If `USE_HELPER: ScreenName.methodName` and helpers file exists → call it
@@ -216,3 +237,4 @@ it.skip('HELPER ISSUE: USE_HELPER requested CartScreen.getTotalWithTax but CartS
 - [ ] Every async call uses `await`
 - [ ] Import paths are correct relative to file location
 - [ ] Test count matches scenario count from analyst report
+- [ ] Debug screenshots inserted after every screen transition (not just SCREENSHOT keywords)
