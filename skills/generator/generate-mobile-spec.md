@@ -67,8 +67,8 @@ describe('Login — Android Smoke', () => {
   it('should login successfully with valid credentials @smoke @P0', async () => {
     const loginScreen = new LoginScreen(browser);
 
-    await loginScreen.typeUsername(process.env.TEST_USERNAME!);
-    await loginScreen.typePassword(process.env.TEST_PASSWORD!);
+    await loginScreen.typeUsername(process.env.MOBILE_USERNAME!);
+    await loginScreen.typePassword(process.env.MOBILE_PASSWORD!);
     await loginScreen.tapLogin();
 
     // VERIFY: Home screen is displayed
@@ -117,26 +117,67 @@ All keywords from `keyword-reference.md` apply. Mobile-specific mappings:
 | REPORT | `console.log()` + annotation | `console.log()` (no test.info in Mocha — use console) |
 | SAVE | `saveState('key', val)` | `saveState('key', val)` (identical) |
 
-### Step 5: App Launch Pattern
+### Step 5: App Launch and Session State Management
 
-Unlike web tests, mobile tests do NOT call `navigate()`. The app is launched via `wdio.conf.ts` capabilities. The test starts from whatever screen the app shows on launch.
+Unlike web tests (where each test gets a fresh browser context), **WDIO reuses a single session across all tests**. `noReset: false` only applies at session creation, not between tests. This means:
 
-**Entry pattern:**
+- App state persists between tests (form fields, navigation, login state)
+- Tests MUST explicitly manage their own starting state
+- Form fields may contain stale values from previous tests
+
+**Entry pattern — single session awareness:**
 ```typescript
-it('test name', async () => {
-  // App is already open — wait for the first screen to be ready
-  const loginScreen = new LoginScreen(browser);
-  await loginScreen.waitForElement('usernameField', 'displayed', 15000);
+// Create a navigation helper that all tests call
+async function navigateToScreen(screen: SomeScreen): Promise<void> {
+  // 1. Dismiss any lingering dialogs from previous tests
+  // 2. Navigate via stable path (e.g., side menu, tab bar)
+  // 3. Wait for the target screen to be ready
+  await screen.waitForScreen();
+}
 
-  // ... rest of test
+describe('My Tests', () => {
+  let myScreen: MyScreen;
+
+  before(async () => {
+    myScreen = new MyScreen(browser);
+  });
+
+  it('test 1', async () => {
+    await navigateToScreen(myScreen);
+    // ... test logic
+  });
 });
 ```
 
-**If the scenario requires starting from a specific screen** (not the launch screen), navigate there:
+**Critical: Clear form fields for "empty state" tests.** If a test verifies empty-field validation (e.g., "tap submit without entering data"), it MUST explicitly clear all fields first — a previous test may have left stale values:
 ```typescript
-await homeScreen.tapSettingsIcon();
-const settingsScreen = new SettingsScreen(browser);
-await settingsScreen.waitForElement('titleLabel');
+// WRONG — fields may contain stale values from previous test
+await loginScreen.tapLogin();
+
+// CORRECT — explicitly clear fields first
+await loginScreen.clearUsername();
+await loginScreen.clearPassword();
+await loginScreen.tapLogin();
+```
+
+Generate `clear{FieldName}()` methods on Screen Objects for any text input field:
+```typescript
+async clearUsername(): Promise<void> {
+  const el = await this.loc.get('usernameField');
+  await el.clearValue();
+}
+```
+
+**If the scenario requires starting from a specific screen** (not the launch screen), navigate there via screen objects — never use raw `browser.$()` selectors in the spec:
+```typescript
+// WRONG
+const menuBtn = await browser.$('~open menu');
+await menuBtn.click();
+
+// CORRECT
+await homeScreen.openMenu();
+await sideMenu.waitForElement('targetItem');
+await sideMenu.tapTarget();
 ```
 
 ### Step 6: Helper Method Resolution (HARD STOP)
@@ -163,11 +204,13 @@ it.skip('HELPER ISSUE: USE_HELPER requested CartScreen.getTotalWithTax but CartS
 
 ## Quality Checks
 - [ ] Every test uses Screen Objects — no direct `browser.$()` calls
+- [ ] No `browser.pause()` in spec — use `waitForElement()` or screen methods
 - [ ] Tags in test description string with `@` prefix: `it('test name @smoke @P0', ...)`
 - [ ] VERIFY steps produce `expect()` assertions
 - [ ] CAPTURE steps produce variable assignments via screen getter methods
 - [ ] DATASETS produce parameterized `for...of` loops
-- [ ] Multi-scenario uses `describe()` with `beforeEach()`
+- [ ] Multi-scenario: each test handles its own navigation state (no reliance on test order)
+- [ ] Empty-field tests explicitly clear fields before assertions (single-session state leaks)
 - [ ] Entry screen uses `waitForElement()` at the start — not `pause()`
 - [ ] If helpers exist, spec imports helpers class aliased to base name
 - [ ] Every async call uses `await`

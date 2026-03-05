@@ -92,7 +92,7 @@ export class MobileLocatorLoader {
    *
    * @throws if the element key is unknown or no strategy resolves to an existing element
    */
-  async get(elementKey: string): Promise<WebdriverIO.Element> {
+  async get(elementKey: string) {
     const entry = this.locators[elementKey];
     if (!entry) {
       throw new Error(

@@ -101,6 +101,29 @@ Or use `press_key('enter')` if the keyboard has a Done/Next/Search action button
 
 ---
 
+### Category M-I: Stale Form State from Previous Test
+**Pattern:** Assertion fails for empty-field validation (e.g., `isUsernameErrorVisible()` returns false), or wrong error message appears, even though the test doesn't enter any data.
+
+**Cause:** WDIO reuses a single session across all tests. Form fields retain values from previous tests. A test that expects empty fields may actually be submitting stale credentials from a prior test.
+
+**Evidence to collect:**
+- Take a **screenshot** of the current screen state BEFORE the failing assertion
+- Check if the previous test in the spec entered data into the same fields
+- Verify if the navigation helper resets the screen or just navigates to it
+
+**Fix:**
+1. Add explicit `clear{FieldName}()` calls before the assertion
+2. The clear method should call `el.clearValue()` on the relevant input elements
+3. If the Screen Object doesn't have clear methods, add them:
+```typescript
+async clearUsername(): Promise<void> {
+  const el = await this.loc.get('usernameField');
+  await el.clearValue();
+}
+```
+
+---
+
 ### Category M-H: Missing Helper (HARD STOP)
 **Pattern:** `TypeError: screen.methodName is not a function`, and the method appears in a `USE_HELPER` reference in the scenario
 
@@ -121,24 +144,38 @@ Test fails
     ├─ NoSuchElementError / waitForDisplayed timeout
     │       ├─ First element of test?                   → Category M-B (wrong screen)
     │       └─ Mid-test element?                        → Category M-A (locator changed)
+    ├─ Assertion fails on empty-field validation         → Category M-I (stale form state)
     ├─ Tap has no effect / StaleElementReference        → Category M-D (animation)
     ├─ Next element after typing is unreachable         → Category M-C (keyboard)
     ├─ Platform-specific selector on wrong platform     → Category M-G
     └─ Missing method matching USE_HELPER               → Category M-H (HARD STOP)
 ```
 
+## Diagnostic Best Practice: Screenshot Before Diagnosis
+
+When diagnosing ANY assertion failure (not just M-I), **take a screenshot first** using the Appium MCP `screenshot` tool. The visual state of the device reveals issues that error messages alone cannot:
+- Stale form data visible in fields
+- Unexpected dialogs or overlays blocking the screen
+- Wrong screen entirely (navigation didn't work)
+- Keyboard covering target elements
+
 ## Diagnostic Commands
 
 ```bash
-# Check if Appium server is running
+# Check if Appium server is running (works on all OSes — curl ships with Windows 10+, macOS, Linux)
 curl http://localhost:4723/status
 
-# List connected devices (Android)
+# List connected devices (Android — works on all OSes with Android SDK)
 adb devices
 
-# List iOS simulators
+# List iOS simulators (macOS only)
 xcrun simctl list devices
 
 # Get app package/activity (Android, app already installed)
+# Linux / macOS:
 adb shell dumpsys window | grep -E 'mCurrentFocus|mFocusedApp'
+# Windows (PowerShell):
+# adb shell dumpsys window | Select-String 'mCurrentFocus|mFocusedApp'
+# Windows (CMD):
+# adb shell dumpsys window | findstr "mCurrentFocus mFocusedApp"
 ```

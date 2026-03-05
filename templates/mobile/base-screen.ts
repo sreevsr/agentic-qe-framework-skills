@@ -64,27 +64,44 @@ export class BaseScreen {
     }
   }
 
-  /** Wait for an element to reach a specific state. */
+  /**
+   * Wait for an element to reach a specific state.
+   * Uses a retry loop because MobileLocatorLoader.get() throws if the element
+   * doesn't exist yet — we need to retry the lookup until the element appears.
+   */
   async waitForElement(
     elementKey: string,
     state: 'displayed' | 'hidden' | 'exist' | 'not exist' = 'displayed',
     timeout = DEFAULT_TIMEOUT,
   ): Promise<void> {
-    const el = await this.loc.get(elementKey);
-    switch (state) {
-      case 'displayed':
-        await el.waitForDisplayed({ timeout });
-        break;
-      case 'hidden':
-        await el.waitForDisplayed({ timeout, reverse: true });
-        break;
-      case 'exist':
-        await el.waitForExist({ timeout });
-        break;
-      case 'not exist':
-        await el.waitForExist({ timeout, reverse: true });
-        break;
+    const interval = 500;
+    const deadline = Date.now() + timeout;
+    let lastError: Error | undefined;
+
+    while (Date.now() < deadline) {
+      try {
+        const el = await this.loc.get(elementKey);
+        switch (state) {
+          case 'displayed':
+            await el.waitForDisplayed({ timeout: Math.max(deadline - Date.now(), 1000) });
+            return;
+          case 'hidden':
+            await el.waitForDisplayed({ timeout: Math.max(deadline - Date.now(), 1000), reverse: true });
+            return;
+          case 'exist':
+            await el.waitForExist({ timeout: Math.max(deadline - Date.now(), 1000) });
+            return;
+          case 'not exist':
+            await el.waitForExist({ timeout: Math.max(deadline - Date.now(), 1000), reverse: true });
+            return;
+        }
+      } catch (err) {
+        lastError = err as Error;
+        if (Date.now() >= deadline) break;
+        await this.driver.pause(interval);
+      }
     }
+    throw lastError ?? new Error(`Element "${elementKey}" did not reach state "${state}" within ${timeout}ms`);
   }
 
   // ════════════════════════════════════════════════════════════════════

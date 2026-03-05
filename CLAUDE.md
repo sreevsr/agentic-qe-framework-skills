@@ -189,7 +189,10 @@ npx playwright show-report                        # View HTML report
 # Mobile (WebdriverIO + Appium)
 # Prerequisites: Appium server running (npx appium), device/emulator connected
 npx wdio wdio.conf.ts --spec tests/mobile/android/{scenario}.spec.ts  # Android
-PLATFORM=ios npx wdio wdio.conf.ts --spec tests/mobile/ios/{scenario}.spec.ts  # iOS
+# iOS (set PLATFORM env var first):
+#   Linux/macOS: PLATFORM=ios npx wdio wdio.conf.ts --spec tests/mobile/ios/{scenario}.spec.ts
+#   Windows CMD: set PLATFORM=ios && npx wdio wdio.conf.ts --spec tests/mobile/ios/{scenario}.spec.ts
+#   PowerShell:  $env:PLATFORM="ios"; npx wdio wdio.conf.ts --spec tests/mobile/ios/{scenario}.spec.ts
 ```
 
 ## MCP Extensibility
@@ -215,3 +218,24 @@ Prerequisites for mobile testing:
 - Appium Server 2.x: `npm install -g appium && appium driver install uiautomator2 xcuitest`
 - Android: Android Studio with SDK, connected device or emulator (`adb devices`)
 - iOS (macOS only): Xcode with iOS Simulator or provisioned device
+
+### Mobile Environment Checklist (verify before running pipeline)
+
+Before running `type=mobile`, verify these prerequisites — environment issues consume most healer cycles:
+
+1. **ANDROID_HOME set** — must point to Android SDK:
+   - Linux: `echo $ANDROID_HOME` (typical: `~/Android/Sdk` or `~/android-sdk`)
+   - macOS: `echo $ANDROID_HOME` (typical: `~/Library/Android/sdk`)
+   - Windows: `echo %ANDROID_HOME%` (typical: `%LOCALAPPDATA%\Android\Sdk`)
+   - The Appium MCP server inherits this from the system environment (not hardcoded in `.mcp.json`)
+2. **Device connected**: `adb devices` must show a connected device/emulator (works on all OSes)
+3. **App installed**: If not using `APP_PATH`, install the APK manually: `adb install -r /path/to/app.apk`
+4. **Appium server running**: `npx appium` in a separate terminal, verify with `curl http://localhost:4723/status`
+5. **APP_PATH vs appPackage**: If the app is already installed, do NOT set `APP_PATH` in `.env` — it triggers aapt2/APK signing requirements. Use `APP_PACKAGE` + `APP_ACTIVITY` instead.
+6. **`.env` file**: Must contain `MOBILE_USERNAME`, `MOBILE_PASSWORD`, `PLATFORM`, `ANDROID_DEVICE`, `APP_PACKAGE`, `APP_ACTIVITY`, `APPIUM_HOST`, `APPIUM_PORT`
+
+### Mobile Testing Caveats
+
+- **Single session**: WDIO reuses one session across all tests. Form fields and app state persist between tests. Tests must explicitly manage their starting state.
+- **Keyboard overlay**: Android soft keyboard covers lower-screen elements. Screen Objects should call `driver.hideKeyboard()` before tapping elements below input fields.
+- **Template WDIO version**: Templates in `templates/mobile/` are compatible with WDIO v9. Do NOT add `autoCompileOpts` (deprecated) or use `Options.Testrunner` type annotation (causes type errors).

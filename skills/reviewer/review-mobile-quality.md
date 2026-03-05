@@ -55,7 +55,7 @@ Audit mobile-specific quality dimensions: locator strategy usage, Screen Object 
 **Red flags:**
 - `browser.$('selector')` in the spec file
 - `driver.pause()` or `setTimeout` in the spec
-- Hardcoded credentials: `typeUsername('standard_user')` — must use `process.env.TEST_USERNAME`
+- Hardcoded credentials: `typeUsername('bob@example.com')` — must use `process.env.MOBILE_USERNAME` / `process.env.MOBILE_PASSWORD`
 - Test does not wait for the entry screen before interacting
 - Missing `describe()` wrapper (Mocha requires it)
 - Tags not in test description string (mobile specs use `@tag` in the `it()` string, not Playwright's `{ tag: [] }`)

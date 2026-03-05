@@ -1,4 +1,3 @@
-import type { Options } from '@wdio/types';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { getCapabilities } from './core/capabilities';
@@ -8,18 +7,11 @@ const env = process.env.TEST_ENV || 'dev';
 dotenv.config({ path: path.join(__dirname, `.env.${env}`) });
 dotenv.config({ path: path.join(__dirname, '.env') });
 
-export const config: Options.Testrunner = {
+export const config = {
   //
   // ─── Runner ───────────────────────────────────────────────────────────────
   //
   runner: 'local',
-  autoCompileOpts: {
-    autoCompile: true,
-    tsNodeOpts: {
-      project: './tsconfig.json',
-      transpileOnly: true,
-    },
-  },
 
   //
   // ─── Specs ────────────────────────────────────────────────────────────────
@@ -81,7 +73,7 @@ export const config: Options.Testrunner = {
     console.log(`Appium: ${process.env.APPIUM_HOST || 'localhost'}:${process.env.APPIUM_PORT || '4723'}\n`);
   },
 
-  afterTest(test, _context, { error }) {
+  afterTest(test: any, _context: any, { error }: { error: any }) {
     if (error) {
       // Screenshot on failure is handled in individual specs via BaseScreen.takeScreenshot()
       console.error(`FAILED: ${test.title}`);

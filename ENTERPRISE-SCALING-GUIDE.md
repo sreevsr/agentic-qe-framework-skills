@@ -10,6 +10,8 @@
 
 The framework generates a **single shared `output/` project** — one `package.json`, one `playwright.config.ts`, one `core/` directory, shared `pages/` and `locators/`. All scenarios for the same application share these artifacts. This is by design: when two scenarios touch the same Login page, they reuse the same `LoginPage.ts` and `login.locators.json`.
 
+This applies equally to mobile: native mobile scenarios for the same app go in the same repo under `scenarios/mobile/{platform}/` (e.g., `scenarios/mobile/android/`, `scenarios/mobile/ios/`). Mobile screen objects in `output/screens/` and mobile locators in `output/locators/mobile/` follow the same shared-project model.
+
 This means **each application needs its own repo**. Mixing multiple applications in one repo causes:
 
 - **Page object collisions** — App A's `LoginPage.ts` and App B's `LoginPage.ts` can't coexist in `output/pages/`
@@ -30,17 +32,23 @@ The reusable engine containing agents, templates, core utilities, and prompt fil
 agentic-qe-framework-skills-v5/      ← Template repo
 ├── CLAUDE.md                         ← Pipeline orchestrator (always loaded)
 ├── ARCHITECTURE.md                   ← Architecture decisions and rationale
-├── skills/                           ← 36 executable skill files + 8 reference/shared docs
+├── skills/                           ← 46 executable skill files + 7 reference/shared docs
 │   ├── _shared/                      # Shared runtime: keyword-reference.md only
 │   ├── _reference/                   # Archived human reference docs (NOT loaded by LLM)
-│   ├── analyst/                      # Browser-based scenario execution
-│   ├── generator/                    # Code generation (10 skills)
-│   ├── healer/                       # Test healing (6 skills)
-│   ├── reviewer/                     # Quality audit (9 skills)
-│   ├── healer-review/                # Review fix application (9 skills)
+│   ├── analyst/                      # Browser/device scenario execution (2 files: web + mobile)
+│   ├── generator/                    # Code generation (14 skills)
+│   ├── healer/                       # Test healing (7 skills)
+│   ├── reviewer/                     # Quality audit (10 skills)
+│   ├── healer-review/                # Review fix application (10 skills)
 │   └── api-analyst/                  # Swagger scenario generation
 ├── templates/core/                   ← Battle-hardened core files
 ├── templates/config/                 ← Configuration templates
+├── templates/mobile/                 ← Mobile base classes and config
+│   ├── base-screen.ts               # Mobile base class
+│   ├── locator-loader-mobile.ts     # Mobile locator loader
+│   ├── wdio.conf.ts                 # WebdriverIO configuration
+│   └── capabilities.ts             # Device capabilities
+├── mcp-servers/appium/               ← Custom Appium MCP server
 ├── scenarios/_template.md            ← Blank scenario template only
 └── ENTERPRISE-SCALING-GUIDE.md       ← This file
 ```
@@ -61,10 +69,15 @@ ars-connect-office-tests/             ← Team repo (forked from template)
 │   │   │   └── work-order-dispatch.md
 │   │   └── technician/               ← folder=technician
 │   │       └── technician-schedule.md
-│   └── api/
-│       ├── field-service-api.md
-│       └── swagger-specs/
-│           └── connect-office-v1.json
+│   ├── api/
+│   │   ├── field-service-api.md
+│   │   └── swagger-specs/
+│   │       └── connect-office-v1.json
+│   └── mobile/
+│       ├── android/
+│       │   └── login-flow.md
+│       └── ios/
+│           └── login-flow.md
 ├── scout-reports/                    ← App-specific DOM intelligence
 ├── output/                           ← Shared generated project (gitignored)
 │   ├── core/                         ← Shared core files
@@ -73,9 +86,16 @@ ars-connect-office-tests/             ← Team repo (forked from template)
 │   ├── tests/web/                    ← Spec files (flat + folder subfolders)
 │   │   ├── work-orders/              ← Specs for folder=work-orders
 │   │   └── technician/               ← Specs for folder=technician
+│   ├── screens/                      ← Screen Objects (mobile)
+│   ├── locators/mobile/              ← Mobile locator JSONs
+│   ├── tests/mobile/                 ← Mobile spec files
+│   │   ├── android/
+│   │   └── ios/
 │   ├── work-orders/                  ← Reports for folder=work-orders
 │   ├── technician/                   ← Reports for folder=technician
-│   ├── playwright.config.ts          ← Shared config
+│   ├── playwright.config.ts          ← Shared config (web/api/hybrid)
+│   ├── wdio.conf.ts                  ← WebdriverIO config (mobile)
+│   ├── core/base-screen.ts           ← Mobile base class
 │   └── package.json                  ← Shared dependencies
 └── .env                              ← App-specific credentials (gitignored)
 ```
@@ -172,7 +192,42 @@ output/
 └── locators/cart.locators.json              ← Shared (not grouped)
 ```
 
-The `folder` parameter is optional. When not provided, the framework looks for scenarios in the flat `scenarios/web/` or `scenarios/api/` directory and places reports directly in `output/`.
+### Mobile Scenarios
+
+Mobile scenarios are organized by platform under `scenarios/mobile/`:
+
+```
+scenarios/
+├── web/
+├── api/
+└── mobile/
+    ├── android/
+    │   ├── login-flow.md
+    │   └── checkout/
+    │       └── purchase-flow.md
+    └── ios/
+        └── login-flow.md
+```
+
+Invocation: `scenario=login-flow type=mobile platform=android`
+
+With folder: `scenario=purchase-flow type=mobile platform=android folder=checkout`
+
+Generated output follows the same pattern — reports at root (or in `output/{folder}/`), specs under `tests/mobile/{platform}/{folder}/`:
+```
+output/
+├── analyst-report-login-flow.md
+├── healer-report-login-flow.md
+├── review-scorecard-login-flow.md
+├── pipeline-summary-login-flow.md
+├── tests/mobile/android/login-flow.spec.ts
+├── screens/LoginScreen.ts                    ← Shared (not grouped)
+└── locators/mobile/login-screen.locators.json
+```
+
+### Folder Parameter
+
+The `folder` parameter is optional. When not provided, the framework looks for scenarios in the flat `scenarios/web/`, `scenarios/api/`, or `scenarios/mobile/{platform}/` directory and places reports directly in `output/`.
 
 All report files include the scenario name in the filename (e.g., `analyst-report-cart-crud.md`, not `analyst-report.md`). This prevents collisions when running multiple scenarios.
 
@@ -233,6 +288,22 @@ npx playwright test --project=webkit
 
 ```bash
 npx playwright test
+```
+
+### Mobile (WebdriverIO + Appium)
+
+```bash
+# Prerequisites: Appium server running, device/emulator connected
+cd output
+
+# Android
+npx wdio wdio.conf.ts --spec tests/mobile/android/login-flow.spec.ts
+
+# iOS (macOS only)
+PLATFORM=ios npx wdio wdio.conf.ts --spec tests/mobile/ios/login-flow.spec.ts
+
+# By folder
+npx wdio wdio.conf.ts --spec tests/mobile/android/checkout/purchase-flow.spec.ts
 ```
 
 ### View HTML Report
@@ -421,15 +492,19 @@ Helpers can **read** shared data freely. Helpers must **never write** to `test-d
 | **Healer** | NEVER modify `*.helpers.ts` files. If a helper causes a failure, mark with `test.fixme('HELPER ISSUE: ...')` and document in the healer report. Pre-edit gate inlined in `skills/healer/apply-fix.md`. |
 | **Reviewer** | Verify specs import helpers class (not base) when helpers exist. Verify helpers follow naming conventions and have proper JSDoc. See `skills/reviewer/review-test-architecture.md`. |
 
+#### Mobile Helper Pattern
+
+Mobile uses the same helper pattern but with Screen Objects in `output/screens/` instead of `output/pages/`. Helper files are `*.helpers.ts` in `output/screens/` (e.g., `LoginScreen.helpers.ts`). The naming convention mirrors the web pattern: `{ScreenName}WithHelpers` extends `{ScreenName}`, with `@helpers {ScreenName}` and `@scenario-triggers` annotations. The Generator discovers mobile helpers by scanning `output/screens/*.helpers.ts`.
+
 #### Team Checklist
 
-1. Name the file `{PageName}.helpers.ts` in `output/pages/`
-2. Export class `{PageName}WithHelpers` extending `{PageName}`
+1. Name the file `{PageName}.helpers.ts` in `output/pages/` (or `{ScreenName}.helpers.ts` in `output/screens/` for mobile)
+2. Export class `{PageName}WithHelpers` extending `{PageName}` (or `{ScreenName}WithHelpers` for mobile)
 3. Add `@helpers {PageName}` to the class JSDoc
 4. Add `@scenario-triggers` to every method JSDoc — list phrases that should invoke this method
 5. Optionally use `USE_HELPER` keyword in scenarios for explicit control
 6. Commit the helpers file to Git — it is team-owned and survives regeneration
-7. Never put custom logic in the generated page object — use the helpers file
+7. Never put custom logic in the generated page/screen object — use the helpers file
 
 ### Modifying an Existing Scenario
 
@@ -488,6 +563,17 @@ If the application uses a proprietary component library not in the table above, 
 
 Scout will then detect and report those components the same way it handles the built-in libraries.
 
+### Mobile-Specific Awareness
+
+Teams working with `type=mobile` should be aware of these platform-specific behaviors:
+
+| Topic | Details |
+|-------|---------|
+| **WDIO single session** | WebdriverIO reuses one driver session across tests in a spec file. Form state persists between tests — tests must explicitly clear input fields before typing new values. |
+| **Android keyboard overlay** | The on-screen keyboard can obscure elements below input fields. Screen methods should dismiss the keyboard (e.g., tap back or press Enter) before tapping buttons positioned below input fields. |
+| **Platform-specific locator strategies** | Some locator strategies are platform-specific: `uiautomator` selectors work only on Android, `class_chain` and `predicate_string` work only on iOS. Use platform-agnostic selectors (`accessibility_id`, `xpath`) for shared scenarios. |
+| **APP_PATH vs appPackage** | If the app is already installed on the device/emulator, do not set `APP_PATH` in capabilities — it triggers `aapt2` parsing which may fail. Use `appPackage` + `appActivity` (Android) or `bundleId` (iOS) instead. |
+
 ---
 
 ## 6. What Needs Framework Enhancement
@@ -495,6 +581,8 @@ Scout will then detect and report those components the same way it handles the b
 | Capability | Current State | Path Forward |
 |-----------|--------------|-------------|
 | Hybrid API + Web scenarios | Supported via `type=hybrid` with `{ page, request }` fixtures | Use `generate-hybrid-spec.md` skill |
+| Native mobile testing | Supported via `type=mobile` with Appium MCP + WebdriverIO | Use `platform=android` or `platform=ios`; see Analyst (Appium MCP) → Generator → Healer → Reviewer pipeline |
+| Cross-platform mobile | Supported via `platform` parameter (android/ios) | Use platform-specific scenarios or shared scenarios with platform-agnostic locators (`accessibility_id`) |
 | Stakeholder reporting dashboards | Playwright HTML + JSON built-in; Allure and ReportPortal documented | See `skills/_reference/reporting.md` |
 | Cross-browser testing | Config supports Chrome, Edge, Firefox, WebKit projects | Healer runs Chrome only for fast fix cycles; cross-browser belongs in CI |
 
@@ -510,10 +598,10 @@ The agentic pipeline (Analyst → Generator → Healer → Reviewer) runs at **d
 DEV TIME (VS Code)                          CI/CD (Pipeline)
 ┌──────────────────────────┐               ┌──────────────────────────┐
 │  QE writes scenario .md  │               │  git checkout + npm ci   │
-│  Orchestrator runs agents│               │  npx playwright install  │
-│  Tests generated + healed│──── commit ──→│  npx playwright test     │
-│  Reviewer approves       │    output/    │  Standard Playwright run │
-│  QE commits output/      │               │  Zero AI, zero tokens    │
+│  Pipeline runs skills    │               │  npx playwright install  │
+│  Tests generated + healed│──── commit ──→│  npx appium (for mobile) │
+│  Reviewer approves       │    output/    │  npx playwright test     │
+│  QE commits output/      │               │  npx wdio wdio.conf.ts   │
 └──────────────────────────┘               └──────────────────────────┘
 ```
 
@@ -525,10 +613,13 @@ Once the pipeline produces APPROVED tests, commit the `output/` directory (or th
 output/
 ├── core/                    ← Commit (shared framework)
 ├── pages/                   ← Commit (page objects)
-├── locators/                ← Commit (selector JSONs)
-├── tests/                   ← Commit (spec files)
+├── screens/                 ← Commit (mobile screen objects)
+├── locators/                ← Commit (selector JSONs, including locators/mobile/)
+├── tests/                   ← Commit (spec files, including tests/mobile/)
 ├── test-data/               ← Commit (test data JSONs)
-├── playwright.config.ts     ← Commit (config)
+├── playwright.config.ts     ← Commit (web/api/hybrid config)
+├── wdio.conf.ts             ← Commit (mobile config)
+├── core/base-screen.ts      ← Commit (mobile base class)
 ├── package.json             ← Commit (dependencies)
 ├── tsconfig.json            ← Commit (TypeScript config)
 └── .env.example             ← Commit (template only, never .env)
@@ -557,6 +648,22 @@ npx playwright test --project=chrome
 npx playwright test --grep @smoke
 ```
 
+### Mobile CI Commands
+
+```bash
+cd output
+npm ci
+
+# Start Appium server in background
+npx appium &
+
+# Android
+npx wdio wdio.conf.ts --spec tests/mobile/android/login-flow.spec.ts
+
+# iOS (macOS CI runners only)
+PLATFORM=ios npx wdio wdio.conf.ts --spec tests/mobile/ios/login-flow.spec.ts
+```
+
 ### CI Environment Variables
 
 Set these as pipeline secrets (GitHub Actions secrets, GitLab CI variables, Azure DevOps variable groups):
@@ -566,7 +673,17 @@ Set these as pipeline secrets (GitHub Actions secrets, GitLab CI variables, Azur
 - `TEST_ENV` — environment name (`dev`, `qa`, `staging`)
 - Any app-specific `ENV_VARS` referenced in scenarios
 
-The `playwright.config.ts` reads `TEST_ENV` to load the correct `.env.{env}` file.
+**Mobile-specific CI variables** (set when running `type=mobile` tests):
+
+- `APPIUM_HOST` — Appium server host (default: `localhost`)
+- `APPIUM_PORT` — Appium server port (default: `4723`)
+- `ANDROID_DEVICE` — Android device name or emulator ID
+- `APP_PACKAGE` — Android app package (e.g., `com.swaglabsmobileapp`)
+- `APP_ACTIVITY` — Android launch activity
+- `MOBILE_USERNAME` / `MOBILE_PASSWORD` — Mobile app test credentials
+- `PLATFORM` — Target platform (`android` or `ios`)
+
+The `playwright.config.ts` reads `TEST_ENV` to load the correct `.env.{env}` file. The `wdio.conf.ts` reads platform-specific variables for device capabilities.
 
 ---
 
@@ -606,11 +723,11 @@ Instead of monolithic agent instructions, the framework uses focused skill files
 |-----------|---------|-------------|-------------|
 | `skills/_shared/` | Shared runtime file: keyword-reference.md (loaded only during spec generation) | 1 | Adding new keywords (e.g., for new MCP servers) |
 | `skills/_reference/` | Archived human reference docs: guardrails, paths, output structure, reporting, fix-guardrails, post-stage-checklist | 7 | Updating canonical rules (then propagate to skills) |
-| `skills/generator/` | Code generation: locators, pages, specs, test data, framework setup, reports | 10 | Changing how tests are generated |
-| `skills/healer/` | Test healing: run, diagnose, fix, report | 6 | Changing diagnosis or fix behavior |
-| `skills/reviewer/` | Quality audit: 8 dimensions + scorecard aggregation | 9 | Changing quality standards |
-| `skills/healer-review/` | Review fix application: 8 dimension fixes + validation | 9 | Changing fix patterns |
-| `skills/analyst/` | Browser-based scenario execution | 1 | Changing element discovery |
+| `skills/analyst/` | Browser/device scenario execution (web + mobile) | 2 | Changing element discovery |
+| `skills/generator/` | Code generation: locators, pages/screens, specs, test data, framework setup, reports | 14 | Changing how tests are generated |
+| `skills/healer/` | Test healing: run, diagnose (web + mobile), fix, report | 7 | Changing diagnosis or fix behavior |
+| `skills/reviewer/` | Quality audit: 9 dimensions + scorecard aggregation | 10 | Changing quality standards |
+| `skills/healer-review/` | Review fix application: 9 dimension fixes + validation | 10 | Changing fix patterns |
 | `skills/api-analyst/` | Swagger → scenario generation | 1 | Changing API scenario templates |
 | `skills/scout/` | Pre-pipeline DOM reconnaissance for component-library apps | 1 | Changing Scout usage instructions or library support notes |
 
@@ -620,10 +737,11 @@ Instead of monolithic agent instructions, the framework uses focused skill files
 scenario=my-feature type=web folder=cart
 │
 └── CLAUDE.md orchestrator reads skills based on type:
-    ├── Analyst    → skills/analyst/analyze-scenario.md
-    ├── Generator  → skills/generator/ (10 skills composed by type)
+    ├── Analyst    → skills/analyst/analyze-scenario.md (web/hybrid)
+    │                skills/analyst/analyze-scenario-mobile.md (mobile)
+    ├── Generator  → skills/generator/ (14 skills composed by type)
     ├── Healer     → skills/healer/heal-loop.md (orchestrates sub-skills)
-    ├── Reviewer   → skills/reviewer/ (8 dimensions + aggregate)
+    ├── Reviewer   → skills/reviewer/ (9 dimensions + aggregate)
     └── Healer-Review (if needed) → skills/healer-review/ (dimension fixes)
 ```
 
@@ -633,9 +751,10 @@ The orchestrator (CLAUDE.md) composes different skills based on `type`:
 
 | Type | Analyst | Locators/Pages | Spec Skill | Review Dims |
 |------|---------|---------------|------------|------------|
-| `web` | Yes | Yes | `generate-web-spec.md` | 1-7 |
+| `web` | Yes (Playwright MCP) | Yes (Pages) | `generate-web-spec.md` | 1-7 |
 | `api` | No | No | `generate-api-spec.md` | 2-8 |
-| `hybrid` | Yes | Yes | `generate-hybrid-spec.md` | 1-8 |
+| `hybrid` | Yes (Playwright MCP) | Yes (Pages) | `generate-hybrid-spec.md` | 1-8 |
+| `mobile` | Yes (Appium MCP) | Yes (Screens) | `generate-mobile-spec.md` | 1-7 + 9 |
 
 Adding a new type requires only 1 new skill file + 1 line in CLAUDE.md. Zero existing skill modifications.
 
@@ -655,14 +774,19 @@ Claude Code runs skills via subagents (Task tool):
 | Folder | Owned By | Committed to Git? | Notes |
 |--------|----------|-------------------|-------|
 | `CLAUDE.md` | QCoE (template repo) | Yes | Pipeline orchestrator |
-| `skills/` | QCoE (template repo) | Yes | 36 executable skill files + 8 reference/shared docs |
+| `skills/` | QCoE (template repo) | Yes | 46 executable skill files + 7 reference/shared docs |
 | `ARCHITECTURE.md` | QCoE (template repo) | Yes | Architecture decisions and rationale |
 | `templates/core/` | QCoE (template repo) | Yes | Source of truth for core files |
 | `templates/config/` | QCoE (template repo) | Yes | Config templates |
+| `templates/mobile/` | QCoE (template repo) | Yes | Mobile base classes and config |
+| `mcp-servers/appium/` | QCoE (template repo) | Yes | Custom Appium MCP server |
 | `scenarios/` | Team | Yes | Application-specific test scenarios |
 | `scout-reports/` | Generated (app-specific) | No (gitignored) | DOM intelligence reports |
 | `output/` | Generated (shared project) | No (gitignored) | One shared project for all scenarios |
 | `output/pages/*.ts` | Generated (pipeline-owned) | Optional | Safe to regenerate. Do not add custom logic here |
 | `output/pages/*.helpers.ts` | Team-maintained | Yes (always) | Custom helper methods. Never touched by pipeline |
+| `output/screens/*.ts` | Generated (pipeline-owned) | Optional | Mobile screen objects. Safe to regenerate |
+| `output/screens/*.helpers.ts` | Team-maintained | Yes (always) | Mobile helper methods. Never touched by pipeline |
 | `output/locators/` | Generated then team-maintained | Optional | Commit if manually customized |
+| `output/locators/mobile/` | Generated then team-maintained | Optional | Mobile locator JSONs. Commit if manually customized |
 | `.env` | Team (secrets) | No (gitignored) | Only `.env.example` is committed |

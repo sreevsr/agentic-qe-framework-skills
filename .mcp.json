@@ -13,8 +13,7 @@
       "args": ["mcp-servers/appium/dist/index.js"],
       "env": {
         "APPIUM_HOST": "localhost",
-        "APPIUM_PORT": "4723",
-        "ANDROID_DEVICE": "emulator-5554"
+        "APPIUM_PORT": "4723"
       }
     }
   }
