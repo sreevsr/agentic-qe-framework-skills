@@ -790,3 +790,244 @@ Claude Code runs skills via subagents (Task tool):
 | `output/locators/` | Generated then team-maintained | Optional | Commit if manually customized |
 | `output/locators/mobile/` | Generated then team-maintained | Optional | Mobile locator JSONs. Commit if manually customized |
 | `.env` | Team (secrets) | No (gitignored) | Only `.env.example` is committed |
+
+---
+
+## 11. Security & Data Privacy
+
+### Data Flow Architecture
+
+Understanding what data goes where is critical for security reviews and compliance.
+
+#### What Runs Locally (Never Leaves Your Machine)
+
+| Component | What It Does | Data It Handles |
+|-----------|-------------|----------------|
+| **Playwright MCP** | Drives your browser for web/hybrid Analyst stage | Full browser DOM, screenshots, cookies, form data |
+| **Appium MCP** | Drives your device/emulator for mobile Analyst stage | Device screen, page source XML, app data |
+| **Test Runner** (Playwright/WDIO) | Executes generated tests in CI or locally | Application under test — full interaction |
+| **Generated Code** (`output/`) | TypeScript test files, page objects, locators | Static code — no runtime AI dependency |
+| **MCP Servers** (`mcp-servers/`) | Local bridge between Claude and browser/device | Runs as a local Node.js process |
+
+**Key point:** MCP tools are local processes. Playwright controls your browser on your machine. Appium controls your device on your machine. The application under test is never proxied through an external service.
+
+#### What Gets Sent to the AI API
+
+| Pipeline Stage | What's Sent | Contains App Data? | Purpose |
+|---------------|-------------|-------------------|---------|
+| **Analyst** (web) | Playwright accessibility snapshots, screenshots, DOM fragments | **Yes** — UI text, element labels, visible data | Element discovery and scenario mapping |
+| **Analyst** (mobile) | Appium screenshots (PNG), page source (XML) | **Yes** — device screen content | Element discovery and scenario mapping |
+| **Generator** | Analyst report text, scenario text, template code | **Indirectly** — element names, URLs, text labels | Code generation |
+| **Healer** (diagnosis) | Error messages, stack traces, Playwright snapshots/screenshots, Appium screenshots/page source | **Yes** — failure state of the application | Failure classification and fix strategy |
+| **Healer** (fix) | Source code of test files, locator JSON | **Minimal** — code only, not live app data | Code modification |
+| **Reviewer** | Generated source code, locator files | **Minimal** — code only | Quality audit |
+
+#### What Never Gets Sent
+
+- Raw database contents or server-side logs
+- `.env` files or credentials
+- Network traffic captures
+- Backend API responses (unless explicitly included in test assertions)
+- Source code of the application under test (only the generated test code)
+
+### Security Tiers
+
+Choose the tier that matches your organization's security posture.
+
+#### Tier 1: Test Environment Isolation (Standard)
+
+**Suitable for:** Most commercial software, SaaS applications, non-regulated industries
+
+Run the pipeline against a dedicated test/staging environment populated with **synthetic data**. Screenshots and DOM snapshots sent to the AI contain only fake users, fake orders, and generated content — no real PII.
+
+```
+Production Environment          Test/Staging Environment
+┌─────────────────────┐        ┌─────────────────────┐
+│ Real customer data   │        │ Synthetic test data  │
+│ Real PII             │   ──→  │ Fake users/orders    │
+│ Real transactions    │  copy  │ Generated content    │
+│                      │ schema │ No real PII          │
+└─────────────────────┘  only  └─────────────────────┘
+                                         │
+                                         │ Pipeline runs here
+                                         ▼
+                                ┌─────────────────────┐
+                                │ Claude API receives: │
+                                │ - Screenshots of     │
+                                │   synthetic data     │
+                                │ - Element labels     │
+                                │ - URL structures     │
+                                │ - Error messages     │
+                                └─────────────────────┘
+```
+
+**What to do:**
+1. Never point the pipeline at a production environment
+2. Use test data generators (Faker, factory-bot, etc.) to populate the staging environment
+3. URL structures and element labels (e.g., `#login-button`, `data-testid="cart-item"`) are generally non-sensitive
+
+**Risk level:** Low.
+
+#### Tier 2: Anthropic Commercial API (Enhanced)
+
+**Suitable for:** Companies with SOC 2, ISO 27001 requirements; commercial software; internal tools with non-classified data
+
+| Concern | Anthropic Policy |
+|---------|-----------------|
+| **Training on your data** | API inputs are **not used for model training** (commercial API terms) |
+| **Data retention** | Processed for the response. Default 30-day retention for trust & safety monitoring. **Zero-retention** available on Enterprise plans |
+| **Encryption** | TLS 1.2+ in transit. AES-256 at rest during retention period |
+| **SOC 2 Type II** | Anthropic is SOC 2 Type II certified |
+
+**What to do:**
+1. Use Tier 1 (synthetic test data) as the baseline
+2. Execute an Anthropic DPA (Data Processing Agreement) for your organization
+3. Request zero-retention if your compliance framework requires it
+4. Document the data flow in your security review materials
+
+**Risk level:** Low-Medium. Covered by standard commercial SaaS security agreements.
+
+#### Tier 3: Private Cloud Deployment (Regulated Industries)
+
+**Suitable for:** Healthcare (HIPAA), finance (PCI-DSS, SOX), government (FedRAMP), defense (ITAR)
+
+Deploy Claude models within your own cloud infrastructure. No data leaves your VPC/VNet.
+
+```
+Your AWS Account / GCP Project (VPC)
+┌──────────────────────────────────────────┐
+│                                          │
+│  ┌─────────┐     ┌──────────────────┐   │
+│  │ Dev      │────→│ Claude on        │   │
+│  │ Machine  │     │ Bedrock / Vertex │   │
+│  └─────────┘     └──────────────────┘   │
+│       │                                  │
+│       ▼                                  │
+│  ┌─────────────────────────────────┐    │
+│  │ Test Environment (staging)      │    │
+│  │ Playwright/Appium runs here     │    │
+│  └─────────────────────────────────┘    │
+│                                          │
+│  Zero data leaves this boundary          │
+└──────────────────────────────────────────┘
+```
+
+**Options:**
+
+| Provider | Configuration | Compliance |
+|----------|--------------|------------|
+| **Amazon Bedrock** | Change API endpoint to Bedrock. Data stays in your AWS account. Inherits IAM, VPC, CloudTrail, KMS. | HIPAA BAA, FedRAMP (GovCloud) |
+| **Google Vertex AI** | Change API endpoint to Vertex. Data stays in your GCP project. Inherits VPC Service Controls, CMEK. | HIPAA BAA, FedRAMP |
+| **Anthropic Enterprise** | Zero-retention API. No data stored after response generation. | SOC 2 Type II, DPA |
+
+The framework code, skills, and MCP tools stay identical — only the API endpoint changes.
+
+**Risk level:** Minimal. Equivalent to any internal API call within your cloud.
+
+### Generated Tests Run Without AI
+
+A critical security advantage: **CI/CD has zero AI data flow.**
+
+```
+DEV TIME (with AI)                    CI/CD (without AI)
+┌────────────────────────┐           ┌────────────────────────┐
+│ Claude generates tests │           │ Standard Node.js       │
+│ Claude heals failures  │── git ──→│ npx playwright test    │
+│ Claude reviews quality │  commit   │ npx wdio run           │
+│                        │           │                        │
+│ AI API required        │           │ NO AI API required     │
+│ Screenshots sent       │           │ Zero external calls    │
+└────────────────────────┘           └────────────────────────┘
+```
+
+Once tests are generated and committed:
+- CI runs pure Playwright/WebdriverIO — no Claude API calls
+- No screenshots leave the CI environment
+- No test data is sent to any AI service
+- Tests are standard TypeScript — auditable, reviewable, version-controlled
+
+**Security review is only needed for the development-time pipeline**, not for CI/CD execution.
+
+### Credential Management
+
+The framework uses environment variables for all credentials. No credentials are ever hardcoded in generated code.
+
+| Rule | Enforced By |
+|------|------------|
+| `.env` never committed | `.gitignore` template includes `.env` |
+| No hardcoded credentials in test code | Reviewer skill (`review-security.md`) checks for this |
+| `.env.example` committed as template (no real values) | Generator skill creates it |
+| CI uses pipeline secrets, not `.env` files | Documented in Section 7 (CI/CD Integration) |
+
+### Network Requirements
+
+**Development time (pipeline running):**
+
+| Destination | Port | Purpose |
+|------------|------|---------|
+| Claude API endpoint (or Bedrock/Vertex) | 443 | AI reasoning calls |
+| Your test environment URL | 80/443 | Playwright/Appium driving the app |
+| `registry.npmjs.org` | 443 | npm install (or private registry) |
+| `localhost:4723` | 4723 | Appium server (mobile only, local) |
+
+**CI/CD time (tests running):** No AI API access needed. Only your test environment URL, npm registry, and Playwright browser downloads.
+
+**Air-gapped environments:** Run the pipeline on a connected dev machine, commit generated tests, mirror npm packages to a private registry, pre-install Playwright browsers in Docker images. CI runs entirely offline.
+
+### Compliance Mapping
+
+| Framework | How This Pipeline Addresses It |
+|-----------|-------------------------------|
+| **HIPAA** | Tier 1: synthetic data (no PHI in screenshots). Tier 3: Bedrock/Vertex (data never leaves your VPC) |
+| **PCI-DSS** | Tier 1: synthetic card numbers in test env. Generated tests never store card data |
+| **SOC 2** | Tier 2: Anthropic DPA + SOC 2 Type II. CI has zero AI vendor dependency |
+| **SOX** | Generated tests are version-controlled. Pipeline reports provide audit trail. CI has no AI calls |
+| **GDPR** | Tier 2: zero-retention API option. Tier 3: data stays in your region (Bedrock EU, Vertex EU) |
+| **FedRAMP** | Tier 3: AWS GovCloud (Bedrock) is FedRAMP authorized |
+| **ISO 27001** | DPA with Anthropic. Data flow documented. Credentials in env vars, not code |
+
+### Audit & Traceability
+
+Every pipeline run produces timestamped reports documenting what the AI did:
+
+```
+output/
+├── analyst-report-{scenario}.md       ← What elements were discovered
+├── generator-report-{scenario}.md     ← What code was generated
+├── healer-report-{scenario}.md        ← What failures occurred, what fixes applied
+├── review-scorecard-{scenario}.md     ← Quality audit results
+└── pipeline-summary-{scenario}.md     ← End-to-end summary
+```
+
+All generated code goes through the same Git workflow as hand-written code — PR review, diff visibility, branch protection. No hidden AI-modified files.
+
+### Security Deployment Checklist
+
+**Before first pipeline run:**
+- [ ] Test/staging environment provisioned with synthetic data
+- [ ] No production data accessible from the development machine
+- [ ] `.env` file uses test credentials, not production credentials
+- [ ] `.gitignore` includes `.env`
+- [ ] Team understands: AI is used at dev time only, CI runs standard tests
+
+**For regulated industries (Tier 3):**
+- [ ] Claude model deployed on Bedrock, Vertex, or Enterprise zero-retention
+- [ ] API endpoint configured to private deployment
+- [ ] VPC/VNet rules restrict outbound traffic to authorized destinations
+- [ ] DPA executed with Anthropic (if using their API directly)
+- [ ] Data flow diagram included in security review documentation
+- [ ] Compliance team has reviewed and approved the deployment tier
+
+### Security FAQ
+
+**Q: Are screenshots of my app sent to external servers?**
+A: During dev-time Analyst and Healer stages, yes — to the Claude API for element discovery and failure diagnosis. In CI/CD, no — generated tests run standalone. For regulated environments, use Tier 3 (Bedrock/Vertex) to keep all data within your cloud.
+
+**Q: Do I need an AI API key in CI/CD?**
+A: No. Generated tests are pure TypeScript. No AI calls during test execution.
+
+**Q: What about the MCP servers — do they send data externally?**
+A: No. MCP servers run as local Node.js processes. They bridge Claude's instructions to your local browser/device. Only the AI reasoning flows to the Claude API.
+
+**Q: Can we audit what the AI generated?**
+A: Yes. All code is standard TypeScript in `output/`, reviewable in any code review tool. Pipeline reports document every AI decision in human-readable markdown.
