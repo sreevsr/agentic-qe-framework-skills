@@ -78,12 +78,39 @@ Classify each test failure into one of 8 diagnostic categories (A-H) to determin
   4. This is NOT a healer failure. It is a signal that the team must create the `*.helpers.ts` file with the required method.
 - **Why:** Base page objects (`{PageName}.ts`) are pipeline-owned and regenerated on every run. Any method added here will be overwritten. `*.helpers.ts` files are team-owned and survive regeneration. The ownership boundary must never be violated.
 
+## Visual Diagnosis Protocol (MANDATORY for web/hybrid)
+
+**Before classifying any failure for `type=web` or `type=hybrid`**, capture the browser state using Playwright MCP tools:
+
+1. **Take a snapshot** using `mcp__playwright__browser_snapshot` — this returns the accessibility tree with element references
+2. **Take a screenshot** using `mcp__playwright__browser_take_screenshot` — this shows what the user would see
+
+Analyze BOTH together:
+
+| Question | What it reveals | Category |
+|----------|----------------|----------|
+| **Is the expected page visible, or is the browser on a different URL/page?** | Wrong page = Category D (navigation). Redirect or auth wall = fixable. | D |
+| **Is there a modal, dialog, cookie banner, or overlay blocking the target element?** | Overlay blocking = dismiss it first, not a locator issue. | D |
+| **Is the target element in the snapshot (accessibility tree) but not visible on screen?** | Element is offscreen, hidden behind accordion, or needs scroll. | B |
+| **Is the target element visible but the selector doesn't match the snapshot?** | Stale selector in locator JSON. | B |
+| **Did the action execute but produce wrong results?** (e.g., form submitted but landed on wrong page) | Business logic constraint — action works but outcome is wrong. | C (flag as POTENTIAL BUG) |
+
+This prevents wasted cycles on wrong fixes — the same principle as the mobile visual diagnosis protocol.
+
 ## Diagnosis Process
 
 For each failure:
-1. Read the error message and stack trace
-2. **Before matching other categories:** Check if the error involves a method referenced by `USE_HELPER` in the scenario. If so → **Category H (HARD STOP)**. Do not classify as Category A or B — those would lead to implementing the method, which is prohibited.
-3. Match against category symptoms (A-G)
-4. If Category C: read the source scenario BEFORE deciding to change values
-5. If Category G: check the API Behavior header in the scenario
-6. Return: `{ testName, category, rootCause, fixStrategy, isPotentialBug }`
+1. **Capture browser state** via Playwright MCP (snapshot + screenshot) — see Visual Diagnosis Protocol above
+2. Read the error message and stack trace
+3. **Before matching other categories:** Check if the error involves a method referenced by `USE_HELPER` in the scenario. If so → **Category H (HARD STOP)**. Do not classify as Category A or B — those would lead to implementing the method, which is prohibited.
+4. Match against category symptoms (A-G), informed by the visual diagnosis
+5. If Category C: read the source scenario BEFORE deciding to change values
+6. If Category G: check the API Behavior header in the scenario
+7. Return: `{ testName, category, rootCause, fixStrategy, isPotentialBug }`
+
+## Scenario Integrity
+
+**The test scenario is the specification.** The Healer fixes technical issues (locators, imports, waits) — it NEVER alters the scenario flow. If a scenario step cannot be executed as written:
+- Wrap in `test.fixme('SCENARIO BLOCKED: Step N "[step]" cannot be executed — [reason]')`
+- Document the blocker in the healer report
+- The scenario author (human) decides next steps

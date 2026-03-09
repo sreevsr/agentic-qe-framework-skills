@@ -77,6 +77,7 @@ In addition to the file-pattern gate above, the following edits are **ALWAYS PRO
 - Document what you changed and why (for the healer report)
 - Never add `waitForTimeout()` or `{ force: true }` — **Exception:** `{ force: true }` is allowed ONLY for elements where the Scout report flags a `HIT-AREA MISMATCH` warning
 - Never skip or delete failing tests
+- **NEVER alter the test scenario flow** — do not reorder, skip, or replace scenario steps. Do not add alternative paths to work around app behavior. Do not change assertion values that the scenario explicitly defines. The scenario is the specification. If a step cannot be executed as written, use `test.fixme('SCENARIO BLOCKED: ...')` and let the scenario author decide.
 
 ## Output
 For each fix applied, return:

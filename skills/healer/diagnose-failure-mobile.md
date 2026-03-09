@@ -134,30 +134,112 @@ async clearUsername(): Promise<void> {
 
 ---
 
-## Decision Flow
+## Visual Diagnosis Protocol (MANDATORY)
+
+**Before classifying ANY failure**, perform this 3-step visual diagnosis. This is not optional — skipping it wastes cycles on wrong fixes.
+
+### Step 1: Capture Device State
+
+Use the Appium MCP tools to capture both visual and structural state:
+
+1. **Take a screenshot** using `mcp__appium__screenshot` — this shows what the user would see
+2. **Capture page source** using `mcp__appium__page_source` — this shows what the accessibility tree contains
+
+Both must be captured at the moment of failure (or as close to it as possible). If the test has already exited, relaunch the app and navigate to the failing step manually via Appium MCP to reproduce the state.
+
+### Step 2: Cross-Reference Visual vs Structural
+
+Analyze BOTH outputs together. Ask these questions:
+
+| Question | What it reveals | Category |
+|----------|----------------|----------|
+| **What screen is visible in the screenshot?** Is it the expected screen or a different one? | Wrong screen = M-B. Overlay/dialog blocking = M-B. | M-B |
+| **Is the target element visible in the screenshot but NOT in page_source?** | Element is rendered but not in accessibility tree = Compose/SwiftUI accessibility gap. Locator fix won't help. | M-J (new) |
+| **Is the target element in page_source but NOT visible in the screenshot?** | Element is offscreen (needs scroll) or behind keyboard. | M-C or needs scroll |
+| **Is the target element visible AND in page_source, but the locator doesn't match?** | Locator attributes have changed (renamed, restructured). | M-A |
+| **Did the action execute but produce wrong results?** (e.g., tap "Search" but returned to home screen) | Business logic constraint — the action works but doesn't do what the test expects. | M-J (new) |
+| **Is the keyboard visible in the screenshot?** | Keyboard overlay blocking interaction. | M-C |
+| **Are there unexpected elements in the screenshot?** (ads, permission dialogs, banners) | Overlay blocking the flow. | M-B |
+
+### Step 3: Check Debug Screenshots
+
+If the spec was generated with the `generate-mobile-spec` skill, it should contain debug screenshots between screen transitions (named `debug-{scenario}-{step}`). Check the `output/` directory:
+
+```bash
+ls output/debug-*.png 2>/dev/null || ls output/screenshots/debug-*.png 2>/dev/null
+```
+
+These screenshots show the app state BETWEEN steps — invaluable for finding exactly where the flow diverged from expectations. Compare sequential debug screenshots to identify the exact transition that failed.
+
+### Example: How Visual Diagnosis Would Have Caught the Airbnb Bug
+
+```
+Error message: "Element 'Go back to the previous search' not found after 30s timeout"
+Text-only diagnosis: "Locator is wrong or element doesn't exist" → Try fixing xpath → WRONG
+
+Visual diagnosis:
+  Screenshot: Shows the HOME SCREEN (not results screen)
+  Page source: Confirms home screen elements present, no results screen elements
+  Cross-reference: The Search button tap returned to home instead of navigating to results
+  Conclusion: NOT a locator issue (M-A). NOT a timing issue (M-D).
+              This is a BUSINESS LOGIC CONSTRAINT (M-J) — Search without dates = cancel.
+  Correct fix: Simplify scenario to avoid date-dependent search, or mark as UNFIXABLE.
+
+Cycles saved: 4+ (we spent 4 cycles trying locator/timing fixes before a screenshot revealed the truth)
+```
+
+---
+
+### Category M-J: Business Logic Constraint (NEW)
+
+**Pattern:** An action executes successfully (no error thrown), but the app navigates to an unexpected screen or produces unexpected results. The element IS tapped, the locator IS correct, but the outcome is wrong.
+
+**Evidence to collect:**
+- Take a screenshot AFTER the action — what screen did the app navigate to?
+- Compare with the expected screen from the analyst report
+- Check if the action has preconditions (e.g., "Search requires date selection", "Submit requires all mandatory fields")
+
+**Cause:** The app's business logic requires preconditions that the test doesn't satisfy. The action is valid but semantically means something different without the precondition (e.g., "Search" without dates = "Cancel").
+
+**Examples:**
+- Tap "Search" without selecting dates → app closes search panel (= cancel), not execute search
+- Tap "Submit" without filling required fields → form resets instead of showing validation errors
+- Tap "Next" on a wizard step that has mandatory fields → silently stays on same step
+
+**Fix:**
+1. **First, check if the precondition can be satisfied as the scenario describes** — can the test fill the required fields / select the required options using the exact steps in the scenario?
+2. **If the precondition can be satisfied**: fix the locator or interaction that's preventing the precondition step from executing
+3. **If the precondition widget is inaccessible** (Compose calendar with no testTags, etc.) or the scenario step cannot be executed as written: wrap in `test.fixme('SCENARIO BLOCKED: Step N "[step]" cannot be executed — [reason: widget inaccessible / business logic requires precondition]')`
+4. **NEVER take an alternative flow** not described in the scenario (e.g., do NOT tap "Flexible" instead of selecting a date, do NOT skip the filter step). The scenario is the specification — if it can't be followed exactly, that's a finding to report, not a problem to work around.
+5. Do NOT keep retrying with locator/timing changes — this is not a locator problem
+6. Document the blocker clearly in the healer report so the scenario author can decide: revise the scenario, file a bug, or request testability improvements from the dev team
+
+---
+
+## Decision Flow (Updated)
 
 ```
 Test fails
+    │
+    ▼
+VISUAL DIAGNOSIS FIRST (mandatory):
+    Take screenshot + page_source via Appium MCP
+    Cross-reference visual state vs structural state
     │
     ├─ Session error (crash, connection refused)        → Category M-E
     ├─ TypeScript compile error                         → Category M-F
     ├─ NoSuchElementError / waitForDisplayed timeout
     │       ├─ First element of test?                   → Category M-B (wrong screen)
+    │       ├─ Element visible in screenshot but
+    │       │  not in page_source?                      → Category M-J (accessibility gap)
     │       └─ Mid-test element?                        → Category M-A (locator changed)
+    ├─ Action succeeds but wrong screen/result          → Category M-J (business logic)
     ├─ Assertion fails on empty-field validation         → Category M-I (stale form state)
     ├─ Tap has no effect / StaleElementReference        → Category M-D (animation)
     ├─ Next element after typing is unreachable         → Category M-C (keyboard)
     ├─ Platform-specific selector on wrong platform     → Category M-G
     └─ Missing method matching USE_HELPER               → Category M-H (HARD STOP)
 ```
-
-## Diagnostic Best Practice: Screenshot Before Diagnosis
-
-When diagnosing ANY assertion failure (not just M-I), **take a screenshot first** using the Appium MCP `screenshot` tool. The visual state of the device reveals issues that error messages alone cannot:
-- Stale form data visible in fields
-- Unexpected dialogs or overlays blocking the screen
-- Wrong screen entirely (navigation didn't work)
-- Keyboard covering target elements
 
 ## Diagnostic Commands
 
